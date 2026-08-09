@@ -204,7 +204,11 @@ if ($MyInvocation.InvocationName -ne '.') {
         )
         $StandardAfter = Get-DirectorySnapshot -Path $StandardRoot
         $AddedPaths = @($StandardAfter.Keys | Where-Object { -not $StandardBefore.ContainsKey($_) } | Sort-Object)
-        Assert-Condition -Condition (($AddedPaths -join ',') -eq 'approved\inventory.json,approved\report.json') -Message "Standard mode wrote unexpected paths: $($AddedPaths -join ', ')"
+        $ExpectedAddedPaths = @(
+            Join-Path 'approved' 'inventory.json'
+            Join-Path 'approved' 'report.json'
+        ) | Sort-Object
+        Assert-Condition -Condition (($AddedPaths -join ',') -eq ($ExpectedAddedPaths -join ',')) -Message "Standard mode wrote unexpected paths: $($AddedPaths -join ', ')"
         $PersistedInventoryValid = (Get-Content -Path $InventoryPath -Raw) | Test-Json -SchemaFile $SchemaPath
         Assert-Condition -Condition $PersistedInventoryValid -Message 'Standard mode persisted an invalid inventory.'
         Assert-Condition -Condition (($StrictReport | ConvertTo-Json -Depth 20 -Compress) -eq ($StandardReport | ConvertTo-Json -Depth 20 -Compress)) -Message 'Strict and standard reports are not semantically equivalent.'
