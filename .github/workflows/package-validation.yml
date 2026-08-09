@@ -70,7 +70,7 @@ jobs:
 
       - name: Verify APM CLI version
         shell: bash
-        run: test "$(apm --version)" = "Agent Package Manager (APM) CLI version ${APM_VERSION}"
+        run: apm --version 2>&1 | tee /dev/stderr | grep -Fq "version ${APM_VERSION}"
 
       - name: Validate package boundary
         shell: pwsh

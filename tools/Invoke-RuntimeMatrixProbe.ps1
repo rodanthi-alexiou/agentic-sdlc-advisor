@@ -91,7 +91,7 @@ if ($MyInvocation.InvocationName -ne '.') {
             Get-RuntimeProbe -Name 'python3' -VersionArguments @('--version')
             Get-RuntimeProbe -Name 'pwsh' -VersionArguments @('--version')
             Get-RuntimeProbe -Name 'bash' -VersionArguments @('--version')
-            Get-RuntimeProbe -Name 'sh' -VersionArguments @('--version')
+            Get-RuntimeProbe -Name 'sh' -VersionArguments @('-c', 'echo $0')
             Get-RuntimeProbe -Name 'apm' -VersionArguments @('--version')
         )
 
