@@ -1,0 +1,25 @@
+name: agentic-sdlc-advisor
+version: 1.0.0
+description: >-
+  Audits a repository's readiness for agent-driven development with GitHub Copilot and
+  produces a cited, prioritized adoption report with pilot use cases. Read-only.
+author: rodanthi-alexiou
+license: MIT
+
+# Release repository: https://github.com/rodanthi-alexiou/agentic-sdlc-advisor
+# Minimum supported APM CLI version: 0.26.0
+
+# Declare the harnesses you deploy to, so committed output stays consistent across
+# machines and CI. Without this, `apm install` exits 2 rather than guessing.
+targets:
+  - copilot
+
+# Explicit consent to deploy and pack local .apm/ content.
+# Omitting this preserves legacy implicit consent and raises an audit advisory.
+includes: auto
+
+dependencies:
+  apm: []
+  mcp: []
+
+scripts: {}

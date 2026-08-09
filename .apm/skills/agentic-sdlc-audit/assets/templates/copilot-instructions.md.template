@@ -1,0 +1,39 @@
+<!--
+  TEMPLATE for .github/copilot-instructions.md
+  Keep under ~300 lines. Everything added dilutes everything else.
+  This file is Copilot-specific. Vendor-neutral facts (build, test, layout, boundaries)
+  belong in AGENTS.md — do not duplicate them here.
+  Where this file and the linter disagree, the linter wins: defer to it, do not restate it.
+-->
+
+# Copilot instructions
+
+Read `AGENTS.md` first for stack, commands, layout, and boundaries. This file covers only
+Copilot-specific working preferences.
+
+## Working style
+- Prefer the smallest change that satisfies the requirement. Do not opportunistically
+  refactor surrounding code.
+- When a task is ambiguous, propose a plan and stop. Do not guess at product intent.
+- Match the surrounding code's existing patterns even where you would choose differently.
+
+## Pull requests you open
+- Title: `<type>: <imperative summary>`
+- Description states: what changed, why, how it was verified, and what was deliberately
+  left out of scope.
+- One logical change per PR. If the diff exceeds ~<N> lines, split it.
+
+## Tests
+- New behaviour requires a test.
+- Tests assert *intended* behaviour. If existing behaviour looks wrong, say so in the PR
+  rather than encoding it as the expected result.
+
+## Do not
+- Modify the boundaries listed in `AGENTS.md`.
+- Add dependencies without saying so explicitly in the PR description.
+- Disable, skip, or weaken a failing test to make CI pass.
+- Commit generated artifacts, credentials, or `.env` files.
+
+## Handoffs
+- Security-sensitive review → `<agent name>`
+- Test authoring → `<agent name>`

@@ -1,0 +1,61 @@
+<!--
+  TEMPLATE — every <ANGLE_BRACKET> placeholder MUST be replaced with a real, verified value.
+  Committing this file with placeholders intact is worse than not having it: it teaches
+  every agent that reads the repo a set of false facts.
+  Verification rule: run each command below before committing. If it fails, fix the
+  command, not the agent.
+  Reference: https://agents.md/ and
+  https://github.blog/ai-and-ml/github-copilot/how-to-write-a-great-agents-md-lessons-from-over-2500-repositories/
+-->
+
+# AGENTS.md
+
+## What this project is
+<One paragraph. What it does, who uses it, what breaking it costs.>
+
+## Stack
+- Language / runtime: <e.g. TypeScript 5.4 on Node 20>
+- Framework: <...>
+- Package manager: <exact — npm vs pnpm vs yarn matters>
+- Datastore: <...>
+
+## Commands
+Run these from the repository root. Each has been verified.
+
+| Purpose | Command |
+|---|---|
+| Install | `<...>` |
+| Build | `<...>` |
+| Test (all) | `<...>` |
+| Test (single file) | `<...>` |
+| Lint | `<...>` |
+| Format | `<...>` |
+| Typecheck | `<...>` |
+
+## Layout
+<Real directories only. Delete lines that do not exist.>
+- `src/<...>/` — <what lives here>
+- `tests/` — <convention: file naming, where new tests go>
+
+## Conventions
+State these by example, pointing at real files. Adjectives like "clean" are not actionable.
+- <e.g. Errors: return `Result<T>`, do not throw across module boundaries — see `src/core/result.ts`>
+- <e.g. Tests: one describe block per exported function — see `tests/core/result.test.ts`>
+
+## Boundaries — do not modify
+- `<e.g. src/generated/**>` — generated, regenerate with `<command>`
+- `<e.g. db/migrations/**>` — human-authored only
+- `<e.g. infra/prod/**>` — requires platform team review
+- Anything touching authentication, secrets, IAM, billing, or customer data
+
+## Definition of done
+A change is ready for review when:
+- [ ] `<build command>` succeeds
+- [ ] `<test command>` passes
+- [ ] `<lint command>` reports no new findings
+- [ ] Public API changes are documented in `<path>`
+- [ ] The PR description states what changed and why
+
+## Known traps
+<The things that cost a new contributor a day. This section earns its keep.>
+- <e.g. `pnpm install` must run before typecheck or module resolution fails confusingly>

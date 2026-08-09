@@ -1,0 +1,47 @@
+# TEMPLATE for .github/workflows/copilot-setup-steps.yml
+#
+# Four requirements, each a documented failure mode if missed:
+#   1. The job MUST be named `copilot-setup-steps` or Copilot silently ignores this file.
+#   2. This file MUST be on the default branch to trigger.
+#   3. Only this single job is permitted in the file.
+#   4. `permissions` should be the minimum needed. Copilot uses its own separate token.
+#
+# If a setup step exits non-zero, Copilot skips the remaining steps and starts anyway with
+# a broken environment. Test via workflow_dispatch before relying on it.
+#
+# Docs: https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/customize-the-agent-environment
+
+name: "Copilot Setup Steps"
+
+on:
+  workflow_dispatch:
+  push:
+    paths: [.github/workflows/copilot-setup-steps.yml]
+  pull_request:
+    paths: [.github/workflows/copilot-setup-steps.yml]
+
+jobs:
+  copilot-setup-steps:          # <-- name is load-bearing, do not change
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read            # only if you clone during setup
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # --- Toolchain: replace with your stack ---
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # --- Dependencies. Resolve PRIVATE feeds here: the agent firewall does not
+      #     apply to setup steps, but the agent's own Bash tool cannot reach them later.
+      - run: npm ci
+
+      # --- Fail loudly. A silent partial setup produces confusing agent failures.
+      - name: Verify the environment the agent will inherit
+        run: |
+          set -euo pipefail
+          npm run build
+          npm test

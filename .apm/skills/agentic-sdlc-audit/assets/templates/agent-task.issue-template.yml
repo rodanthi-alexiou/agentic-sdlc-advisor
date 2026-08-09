@@ -1,0 +1,45 @@
+# TEMPLATE for .github/ISSUE_TEMPLATE/agent-task.yml
+# For asynchronous delegation the issue IS the prompt. These fields are the difference
+# between a merged PR and a wasted agent run.
+name: Agent-ready task
+description: A task scoped tightly enough to assign to a coding agent
+labels: ["agent-ready"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is wrong or missing, and why it matters. Not the solution.
+    validations: {required: true}
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Checklist. Include whether tests are required and what they must cover.
+      value: |
+        - [ ]
+        - [ ] Tests added covering <...>
+        - [ ] `<build command>` and `<test command>` pass
+    validations: {required: true}
+
+  - type: textarea
+    id: pointers
+    attributes:
+      label: Where to look
+      description: Files, modules, or symbols likely involved. A guess is better than nothing.
+    validations: {required: true}
+
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: What must NOT change. Prevents opportunistic refactoring.
+    validations: {required: true}
+
+  - type: input
+    id: reviewer
+    attributes:
+      label: Reviewer
+      description: Who has the domain knowledge to catch a plausible-but-wrong answer?
+    validations: {required: true}
