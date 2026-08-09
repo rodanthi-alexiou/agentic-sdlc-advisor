@@ -1,13 +1,13 @@
 ---
 title: Audit Runtime and Dispatch
-description: Provisional runtime and public command decision for the cross-platform audit
+description: Accepted runtime and public command decision for the cross-platform audit
 ms.date: 2026-08-09
 ms.topic: architecture-decision
 ---
 
 ## Status
 
-Proposed, pending measured GitHub Actions matrix results.
+Accepted.
 
 ## Context
 
@@ -27,9 +27,37 @@ The repository workflow `Package validation` contains the job
 `windows-latest`, `ubuntu-latest`, and `macos-latest`, then uploads one structured JSON
 artifact per operating system.
 
+Run [31314580883](https://github.com/rodanthi-alexiou/agentic-sdlc-advisor/actions/runs/31314580883)
+completed successfully for commit `41b8c04e20a18634b1fbe239ef970d9a6db9c0e6` on
+2026-08-09. The accepted evidence is preserved in these run artifacts:
+
+* `runtime-probe-windows-latest`, artifact `9038354391`
+* `runtime-probe-ubuntu-latest`, artifact `9038354655`
+* `runtime-probe-macos-latest`, artifact `9038353408`
+
+### Hosted runner measurements
+
+Startup values are single probe durations and compare prerequisite cost only. They are
+not application benchmarks.
+
+| Candidate | Windows 10.0.26100 X64 | Ubuntu 24.04.4 LTS X64 | macOS 26.5.2 Arm64 |
+|---|---|---|---|
+| Node.js | v22.23.2, 638.37 ms | v22.23.1, 91.05 ms | v24.18.0, 351.57 ms |
+| Python | 3.12.10, 153.46 ms | 3.12.3, 2.25 ms | 3.14.6, 174.95 ms |
+| Python 3 | 3.12.10, 26.18 ms | 3.12.3, 1.85 ms | 3.14.6, 106.34 ms |
+| PowerShell | 7.6.4, 164.67 ms | 7.6.3, 83.50 ms | 7.6.4, 120.21 ms |
+| Bash | 5.3.15, 121.19 ms | 5.2.21, 1.94 ms | 3.2.57, 38.14 ms |
+| POSIX `sh` | `/usr/bin/bash`, 77.49 ms | `/usr/bin/sh`, 1.34 ms | `/bin/sh`, 40.33 ms |
+| APM | Not preinstalled | Not preinstalled | Not preinstalled |
+
+Each artifact records Node as available and the dispatcher probe as successful with
+contract version `1.0.0`. The dispatcher reported `win32`/`x64`, `linux`/`x64`, and
+`darwin`/`arm64`, matching the corresponding runners. The separate `validate-package`
+job installed APM CLI 0.26.0 and passed version, package-boundary, and contract tests.
+
 GitHub runner-image documentation lists installed software for each hosted image. That is
-runner-image contract evidence, not a completed measurement for this repository. The
-matrix artifacts remain the acceptance evidence.
+runner-image contract evidence. The run artifacts above are the acceptance evidence for
+this repository.
 
 * [GitHub Actions runner images](https://github.com/actions/runner-images)
 * [Windows runner image documentation](https://github.com/actions/runner-images/tree/main/images/windows)
@@ -72,8 +100,7 @@ through APM 0.26.0.
 
 ## Decision
 
-Use Node.js for the provisional host-neutral dispatcher and point both APM scripts to the
-same file:
+Use Node.js for the host-neutral dispatcher and point both APM scripts to the same file:
 
 ```yaml
 scripts:
@@ -81,10 +108,9 @@ scripts:
   audit: node .apm/skills/agentic-sdlc-audit/scripts/audit-dispatch.mjs
 ```
 
-Do not claim the shared portable core as final until all three matrix artifacts show a
-supportable Node runtime and a successful dispatcher probe. If any supported image lacks
-Node or cannot execute the dispatcher, retain the JSON schema and fixture suite and select
-contract-equivalent PowerShell and POSIX backends.
+The shared portable core is supported by the accepted hosted measurements. If a future
+supported image lacks Node or cannot execute the dispatcher, retain the JSON schema and
+fixture suite and reassess contract-equivalent PowerShell and POSIX backends.
 
 ## Consequences
 
@@ -98,7 +124,7 @@ current no-argument failure is explicit rather than a fabricated partial audit. 
 
 ## Acceptance Gate
 
-This decision becomes accepted only after all jobs named
-`Package validation / Runtime and dispatch probe (<os>)` pass and their uploaded JSON
-artifacts are reviewed. Until then, Step 2.1 is partial and the Node shared-core decision
-is provisional.
+Satisfied by run `31314580883`. All jobs named
+`Package validation / Runtime and dispatch probe (<os>)` passed, all three uploaded JSON
+artifacts were reviewed, and `validate-package` passed. Node is available and the
+dispatcher probe succeeds on every supported runner.
