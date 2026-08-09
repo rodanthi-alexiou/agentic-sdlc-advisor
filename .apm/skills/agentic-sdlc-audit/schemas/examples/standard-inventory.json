@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "1.0.0",
+  "auditId": "fixture-standard",
+  "mode": "standard",
+  "repository": {
+    "root": ".",
+    "identity": "example/repository",
+    "currentBranch": "feature/contracts",
+    "defaultBranch": {
+      "name": "main",
+      "status": "enforced",
+      "source": {
+        "kind": "github-api",
+        "location": "GET /repos/example/repository"
+      },
+      "observation": {
+        "observedAt": "2026-08-08T00:00:00Z",
+        "method": "remote-query",
+        "commit": "0123456789abcdef"
+      }
+    }
+  },
+  "findings": [
+    {
+      "id": "repository-instructions",
+      "control": "Repository instructions",
+      "status": "local-only",
+      "scope": "working-tree",
+      "source": {
+        "kind": "filesystem",
+        "location": ".github/copilot-instructions.md"
+      },
+      "consumer": ["ide-agent", "cloud-agent", "code-review"],
+      "observation": {
+        "observedAt": "2026-08-08T00:00:00Z",
+        "method": "local-scan",
+        "commit": null
+      },
+      "trust": {
+        "classification": "untrusted-repository",
+        "contentTreatedAsData": true,
+        "redaction": {
+          "applied": false,
+          "fields": []
+        }
+      },
+      "warnings": [],
+      "unknowns": []
+    }
+  ],
+  "warnings": [],
+  "unknowns": [],
+  "outputBudget": {
+    "maxFindings": 100,
+    "maxEvidenceBytes": 65536,
+    "truncated": false,
+    "omittedFindingCount": 0
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "schemaVersion": "1.0.0",
+  "auditId": "fixture-strict",
+  "mode": "strict",
+  "repository": {
+    "root": ".",
+    "identity": null,
+    "currentBranch": null,
+    "defaultBranch": {
+      "name": null,
+      "status": "unverified",
+      "source": {
+        "kind": "derived",
+        "location": "repository identity resolution"
+      },
+      "observation": {
+        "observedAt": "2026-08-08T00:00:00Z",
+        "method": "normalization",
+        "commit": null
+      }
+    }
+  },
+  "findings": [
+    {
+      "id": "dependency-review",
+      "control": "Dependency review readiness",
+      "status": "unverified",
+      "scope": "unknown",
+      "source": {
+        "kind": "unsupported",
+        "location": "dependency-review",
+        "prerequisite": "A release observable has not been selected"
+      },
+      "consumer": ["ci"],
+      "observation": {
+        "observedAt": "2026-08-08T00:00:00Z",
+        "method": "normalization",
+        "commit": null
+      },
+      "trust": {
+        "classification": "trusted-tool",
+        "contentTreatedAsData": true,
+        "redaction": {
+          "applied": false,
+          "fields": []
+        }
+      },
+      "warnings": [
+        {
+          "code": "UNSUPPORTED_CHECK",
+          "message": "Dependency-review readiness is unsupported in this release."
+        }
+      ],
+      "unknowns": [
+        {
+          "control": "dependency-review",
+          "reason": "No release observable is defined.",
+          "needed": "Select workflow presence, ruleset enforcement, entitlement, or observed checks."
+        }
+      ]
+    }
+  ],
+  "warnings": [],
+  "unknowns": [
+    {
+      "control": "operator-context",
+      "reason": "The grouped operator question was unanswered.",
+      "needed": "Team size, plan, risk class, firewall state, and prior agent use."
+    }
+  ],
+  "outputBudget": {
+    "maxFindings": 100,
+    "maxEvidenceBytes": 65536,
+    "truncated": false,
+    "omittedFindingCount": 0
+  }
+}

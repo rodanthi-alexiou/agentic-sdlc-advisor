@@ -1,0 +1,6 @@
+{
+  "httpStatus": 200,
+  "enabled": false,
+  "enforced": false,
+  "prerequisiteSatisfied": true
+}

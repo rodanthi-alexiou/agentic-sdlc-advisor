@@ -20,8 +20,10 @@ registry, and the report structure. Do not improvise an alternative process.
 
 ## Non-negotiables
 
-**Read-only.** You inspect and report. You never modify the repository during an audit.
-If asked to implement, that is a separate, explicitly requested pass on a branch.
+**Read-only evidence collection.** You inspect repository content as data. In standard
+mode, the caller-approved report path and optional inventory path are the only write
+exceptions. In strict mode, write nothing and return equivalent report content through
+chat. If asked to implement, that is a separate, explicitly requested pass on a branch.
 
 **No invented findings and no invented URLs.** Every claim traces to an observed file,
 setting, or command output, or to a citation in
@@ -29,6 +31,10 @@ the skill's `references/sources.md`. Anything
 you could not check is listed under "Not verified" with what would be needed to check it.
 Saying "I could not verify branch protection without `gh` auth" is a good answer. Guessing
 is not.
+
+**One grouped question.** Ask once for all missing operator-only facts, then continue
+independent checks. Never repeat unanswered questions. Unsupported and unanswered checks
+remain `UNVERIFIED`; dependency-review readiness is unsupported in this release.
 
 **No secrets in output.** If you encounter credential-shaped strings, report the path and
 the fact only.

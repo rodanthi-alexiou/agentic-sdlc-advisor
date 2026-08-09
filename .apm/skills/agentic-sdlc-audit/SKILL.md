@@ -15,9 +15,9 @@ metadata:
   author: agentic-sdlc-advisor
   version: "1.0"
   compatibility: >-
-    Read-only by default. Needs shell access to run scripts/scan.sh (POSIX sh, git, grep).
-    Optional: gh CLI authenticated with repo read scope for branch-protection and
-    security-settings checks. Falls back to file-only inspection when gh is unavailable.
+    Read-only by default. The provisional dispatcher requires Node.js on PATH; final
+    cross-platform support is gated by the runtime-dispatch-probe matrix. Optional: gh CLI
+    authenticated with repo read scope. Falls back to local inspection when unavailable.
 ---
 
 # Agentic SDLC Audit
@@ -30,7 +30,8 @@ audit unless the user explicitly asks for the follow-up implementation PR (Phase
 
 ## Operating rules
 
-1. **Read-only by default.** Inspect, do not edit. State this to the user up front.
+1. **Read-only by default.** Inspect, do not edit. Standard mode writes only approved
+  report and optional inventory paths. Strict mode writes nothing.
 2. **Never invent findings.** Every claim in the report must trace to either (a) a file or
    setting you actually observed, or (b) a citation from `references/sources.md`. If you
    could not check something, mark it `UNVERIFIED` and say why.
@@ -43,38 +44,52 @@ audit unless the user explicitly asks for the follow-up implementation PR (Phase
 5. **Right-size the recommendation.** A 3-person internal tool and a 400-engineer regulated
    platform get different answers. Do not recommend Level 4 assets to a Level 0 repo.
 6. **Cite everything.** Each recommendation carries at least one source link.
+7. **Use structured evidence.** Validate inventory against
+   `schemas/inventory-v1.schema.json`. Scoring and rendering never parse prose output.
+8. **Ask once.** Group all non-discoverable operator fields into one question. Continue
+   independent checks without an answer and record each missing fact as `UNVERIFIED`.
+
+## Output contract
+
+Select one mode before collection:
+
+* `standard` requires a caller-approved report path and may accept one separately approved
+  inventory path. No other path may change.
+* `strict` ignores no side effects: it writes nothing and returns the report through
+  stdout or chat.
+
+Both modes expose equivalent findings, scores, citations, warnings, and unknowns. Output
+disposition is not evidence and must not affect scoring. Full inventory persistence is
+optional and requires an explicit path in standard mode.
+
+Before remote inspection, collect any missing team size, Copilot plan, regulated-domain
+status, firewall state, and prior coding-agent use in one grouped question. Do not repeat
+the question. Unsupported checks, including dependency-review readiness in this release,
+remain `UNVERIFIED`.
 
 ## Workflow
 
 ### Phase 1 — Inventory (deterministic)
 
-Run the scan script rather than eyeballing the tree; it is faster and repeatable.
+Use the package dispatcher rather than selecting a host-specific collector path. During
+Phase 2, `--probe` verifies dispatch only; Phase 3 supplies collection.
 
 ```bash
-# Locate this skill's directory, wherever the runtime installed it
-# (.agents/skills/, .github/skills/, .claude/skills/, or apm_modules/)
-SKILL_DIR=$(dirname "$(find . -path '*agentic-sdlc-audit/SKILL.md' -not -path './.apm/*' 2>/dev/null | head -1)")
-sh "${SKILL_DIR:-.}/scripts/scan.sh"
+apm run audit
 ```
 
-If that finds nothing, the skill was installed outside the workspace; run
-`scan.sh` from wherever the skill lives, passing the target repo root as its
-first argument.
-
-It emits a JSON-ish facts block covering: presence and size of every Copilot
-customization asset, CI workflows, test/build entry points, security workflows, issue and
-PR templates, repo scale signals, and monorepo shape. If the script is unavailable, fall
-back to manual checks — the file list it covers is enumerated in
-`references/rubric.md`.
+The collector emits a schema-valid inventory. If dispatch or collection is unavailable,
+record the prerequisite failure and continue with independent manual checks. Do not parse
+the legacy `scan.sh` prose as structured evidence.
 
 Then gather what the script cannot see:
 
 - `gh api repos/{owner}/{repo}/branches/{default}/protection` — branch protection.
 - `gh api repos/{owner}/{repo}` — visibility, default branch, language.
-- Repo Settings → Copilot → Cloud agent — firewall allowlist state (ask the user; not
-  readable from the filesystem).
-- Ask the user: team size, Copilot plan (Business vs Enterprise), regulated domain,
-  current Copilot usage, and whether anyone has run the coding agent yet.
+- Repo Settings → Copilot → Cloud agent: firewall allowlist state, from grouped operator
+  input because it is not readable from the filesystem.
+- Team size, Copilot plan, regulated domain, current Copilot usage, and prior coding-agent
+  use from the same grouped operator question.
 
 Do not stall the audit waiting for answers. Proceed with what you have and mark the rest
 `UNVERIFIED`.
@@ -149,8 +164,9 @@ Follow `assets/report-template.md` exactly. Non-negotiable properties:
 - Include a "Do not do yet" section. Telling a Level 1 team to skip multi-agent
   orchestration is as valuable as telling them what to build.
 
-Write the report to `agentic-sdlc-report.md` in the repo root unless the user names a
-different path. Offer, but do not assume, a follow-up implementation PR.
+In standard mode, write the report only to the caller-approved path and write inventory
+only when a separate path was approved. In strict mode, return equivalent report content
+without writing. Offer, but do not assume, a follow-up implementation PR.
 
 ### Phase 6 — Implementation (only on explicit request)
 
@@ -175,6 +191,7 @@ Read these as needed — do not load them all up front.
 | `references/maturity-model.md` | Phase 3. Levels, gates, and what not to do yet. |
 | `references/use-cases.md` | Phase 4. Pilot catalogue with fit criteria. |
 | `references/sources.md` | Phase 5, always. Canonical citation list — cite from here, do not invent URLs. |
+| `references/evidence-contract.md` | Phases 1, 3, and 5. Inventory status, scope, trust, and compatibility semantics. |
 | `assets/report-template.md` | Phase 5. Output structure. |
 | `assets/templates/` | Phase 6 only. Starter files. |
 

@@ -6,8 +6,11 @@ on:
       - .apm/**
       - .github/workflows/package-validation.yml
       - apm.yml
+      - docs/adr/**
       - DISTRIBUTION.md
       - README.md
+      - tests/**
+      - tools/Invoke-RuntimeMatrixProbe.ps1
       - tools/Test-PackageBoundary.ps1
   push:
     branches:
@@ -16,8 +19,11 @@ on:
       - .apm/**
       - .github/workflows/package-validation.yml
       - apm.yml
+      - docs/adr/**
       - DISTRIBUTION.md
       - README.md
+      - tests/**
+      - tools/Invoke-RuntimeMatrixProbe.ps1
       - tools/Test-PackageBoundary.ps1
   workflow_dispatch:
 
@@ -25,6 +31,30 @@ permissions:
   contents: read
 
 jobs:
+  runtime-dispatch-probe:
+    name: Runtime and dispatch probe (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-latest
+          - ubuntu-latest
+          - macos-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Capture runtime and dispatch facts
+        shell: pwsh
+        run: ./tools/Invoke-RuntimeMatrixProbe.ps1 -OutputPath artifacts/runtime-probe.json
+
+      - name: Upload runtime probe
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-probe-${{ matrix.os }}
+          path: artifacts/runtime-probe.json
+
   validate-package:
     name: Validate authoritative package and plugin bundle
     runs-on: ubuntu-latest
@@ -45,3 +75,7 @@ jobs:
       - name: Validate package boundary
         shell: pwsh
         run: ./tools/Test-PackageBoundary.ps1
+
+      - name: Run Phase 2 contract tests
+        shell: pwsh
+        run: ./tests/Invoke-ContractTests.ps1

@@ -22,4 +22,6 @@ dependencies:
   apm: []
   mcp: []
 
-scripts: {}
+scripts:
+  start: node .apm/skills/agentic-sdlc-audit/scripts/audit-dispatch.mjs
+  audit: node .apm/skills/agentic-sdlc-audit/scripts/audit-dispatch.mjs

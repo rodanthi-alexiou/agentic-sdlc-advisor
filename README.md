@@ -69,13 +69,23 @@ assign it to Copilot with the custom agent selected. The report comes back as a 
 The skill triggers on natural phrasing too — "are we set up for the coding agent?", "why do
 our agent PRs keep failing?", "what should our AGENTS.md say?"
 
+The package exposes one provisional APM dispatch path through both `apm run` and
+`apm run audit`. Node.js is the provisional runtime while the Windows, Ubuntu, and macOS
+probe matrix is pending. `apm run audit` returns an explicit not-implemented result until
+Phase 3 adds collection; `node .apm/skills/agentic-sdlc-audit/scripts/audit-dispatch.mjs
+--probe` verifies the Phase 2 launcher.
+
 ## The output
 
-A report at `agentic-sdlc-report.md`: verdict and single highest-leverage action, repo
-profile, per-pillar findings with evidence, at most five recommendations ordered by
-leverage, three ranked pilot use cases with named reviewers and stop conditions, the gates
-blocking the next level, an explicit *do not do yet* list, risks, and everything it could
-not verify.
+Standard mode writes only a caller-approved report path and, when separately approved, an
+inventory path. Strict mode writes nothing and returns equivalent report content through
+chat or stdout. Both modes contain the same findings, scores, citations, warnings, and
+unknowns.
+
+The report contains a verdict and single highest-leverage action, repository profile,
+per-pillar evidence, at most five recommendations, three ranked pilots, advancement
+gates, explicit deferrals, risks, and every unverified check. Raw scanner output is not
+included by default.
 
 ## Design decisions worth knowing
 
@@ -87,8 +97,9 @@ generated code reaching main. Averaging would hide exactly the thing that matter
 the most common way an audit report loses credibility. Entries are marked `VERIFIED` or
 `TITLE-ONLY` so the distinction survives into the report.
 
-**Deterministic work lives in `scan.sh`.** Asking a model to enumerate files is slower and
-less reliable than a shell script. The model does judgement; the script does inventory.
+**Deterministic work emits structured inventory.** The inventory validates against
+`schemas/inventory-v1.schema.json`; scoring and rendering consume that model rather than
+parsing human-readable scanner output.
 
 **The evidence is presented as mixed, because it is.** The skill explicitly forbids quoting
 headline productivity percentages without their counter-evidence. Reports written for
@@ -99,14 +110,15 @@ Level 1 team not to adopt spec-driven development is often the most valuable lin
 
 ## Limits
 
-- Static inspection plus operator input. It does not read your Copilot metrics, CI history,
+* Static inspection plus operator input. It does not read your Copilot metrics, CI history,
   or actual agent session logs — those would sharpen it considerably.
-- Branch protection, firewall state, Advanced Security enablement, and plan tier are not
+* Branch protection, firewall state, Advanced Security enablement, and plan tier are not
   visible from the filesystem. Supply `gh` auth or answer the questions; otherwise they land
   under *Not verified*.
-- The scoring thresholds are a considered opinion, not an industry standard. Adjust
+* Dependency-review readiness is unsupported and remains `UNVERIFIED` in this release.
+* The scoring thresholds are a considered opinion, not an industry standard. Adjust
   `rubric.md` to your organization's risk posture.
-- This ecosystem changes monthly. Re-verify `sources.md` before treating any citation as
+* This ecosystem changes monthly. Re-verify `sources.md` before treating any citation as
   current.
 
 ## License

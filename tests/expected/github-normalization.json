@@ -1,0 +1,7 @@
+{
+  "enforced.json": "enforced",
+  "unauthenticated.json": "unauthenticated",
+  "unauthorized.json": "unauthorized",
+  "ambiguous-not-found.json": "unverified",
+  "disabled.json": "disabled"
+}

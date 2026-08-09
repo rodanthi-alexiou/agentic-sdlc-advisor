@@ -1,0 +1,7 @@
+{
+  "teamSize": 8,
+  "copilotPlan": "business",
+  "regulatedDomain": false,
+  "firewallState": "configured",
+  "codingAgentUsed": true
+}

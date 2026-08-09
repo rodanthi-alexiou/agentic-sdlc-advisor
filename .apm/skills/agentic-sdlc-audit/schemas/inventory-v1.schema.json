@@ -1,0 +1,304 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/rodanthi-alexiou/agentic-sdlc-advisor/schemas/inventory-v1.schema.json",
+  "title": "Agentic SDLC audit inventory version 1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "auditId",
+    "mode",
+    "repository",
+    "findings",
+    "warnings",
+    "unknowns",
+    "outputBudget"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "auditId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mode": {
+      "enum": ["standard", "strict"]
+    },
+    "repository": {
+      "$ref": "#/definitions/repository"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/finding"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/message"
+      }
+    },
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/unknown"
+      }
+    },
+    "outputBudget": {
+      "$ref": "#/definitions/outputBudget"
+    }
+  },
+  "definitions": {
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "identity", "currentBranch", "defaultBranch"],
+      "properties": {
+        "root": {
+          "type": "string",
+          "minLength": 1
+        },
+        "identity": {
+          "type": ["string", "null"]
+        },
+        "currentBranch": {
+          "type": ["string", "null"]
+        },
+        "defaultBranch": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "status", "source", "observation"],
+          "properties": {
+            "name": {
+              "type": ["string", "null"]
+            },
+            "status": {
+              "$ref": "#/definitions/status"
+            },
+            "source": {
+              "$ref": "#/definitions/source"
+            },
+            "observation": {
+              "$ref": "#/definitions/observation"
+            }
+          }
+        }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "control",
+        "status",
+        "scope",
+        "source",
+        "consumer",
+        "observation",
+        "trust",
+        "warnings",
+        "unknowns"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "control": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "$ref": "#/definitions/status"
+        },
+        "scope": {
+          "enum": [
+            "working-tree",
+            "head-branch",
+            "default-branch",
+            "repository",
+            "organization",
+            "unknown"
+          ]
+        },
+        "source": {
+          "$ref": "#/definitions/source"
+        },
+        "consumer": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "ide-agent",
+              "cloud-agent",
+              "code-review",
+              "maintainer",
+              "ci",
+              "unknown"
+            ]
+          }
+        },
+        "observation": {
+          "$ref": "#/definitions/observation"
+        },
+        "trust": {
+          "$ref": "#/definitions/trust"
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/message"
+          }
+        },
+        "unknowns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/unknown"
+          }
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "enforced",
+        "gap",
+        "unavailable",
+        "unauthorized",
+        "unauthenticated",
+        "disabled",
+        "local-only",
+        "unverified"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "location"],
+      "properties": {
+        "kind": {
+          "enum": ["filesystem", "git", "github-api", "operator", "derived", "unsupported"]
+        },
+        "location": {
+          "type": "string",
+          "minLength": 1
+        },
+        "httpStatus": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 599
+        },
+        "prerequisite": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observedAt", "method"],
+      "properties": {
+        "observedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "method": {
+          "enum": ["local-scan", "git-query", "remote-query", "operator-input", "normalization"]
+        },
+        "commit": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "trust": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["classification", "contentTreatedAsData", "redaction"],
+      "properties": {
+        "classification": {
+          "enum": ["trusted-tool", "untrusted-repository", "untrusted-remote", "operator-provided"]
+        },
+        "contentTreatedAsData": {
+          "type": "boolean"
+        },
+        "redaction": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["applied", "fields"],
+          "properties": {
+            "applied": {
+              "type": "boolean"
+            },
+            "fields": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "message": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "unknown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["control", "reason", "needed"],
+      "properties": {
+        "control": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "needed": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "outputBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxFindings", "maxEvidenceBytes", "truncated", "omittedFindingCount"],
+      "properties": {
+        "maxFindings": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxEvidenceBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "omittedFindingCount": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

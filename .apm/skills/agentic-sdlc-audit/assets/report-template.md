@@ -1,7 +1,20 @@
-# Agentic SDLC Readiness Report — `<owner>/<repo>`
+---
+title: Agentic SDLC Readiness Report
+description: Bounded output template for repository readiness audit results
+---
 
-**Date:** <YYYY-MM-DD> · **Assessed by:** agentic-sdlc-audit v1.0 · **Method:** read-only
-static inspection plus stated operator input. No repository changes were made.
+## Report metadata
+
+| Field | Value |
+|---|---|
+| Repository | `<owner>/<repo>` |
+| Date | `<YYYY-MM-DD>` |
+| Assessor | `agentic-sdlc-audit v1.0` |
+| Output mode | `<standard or strict>` |
+| Report disposition | `<approved path or returned through chat/stdout>` |
+| Inventory disposition | `<approved path, not requested, or not written>` |
+| Method | Read-only inspection plus stated operator input |
+| Truncated | `<yes or no; include omitted count>` |
 
 ---
 
@@ -135,7 +148,13 @@ List only sources actually cited above, with their IDs and URLs from
 
 ---
 
-## Appendix A — Raw scan output
-```
-<paste scan.sh output>
-```
+## Appendix A — Output budget
+
+| Limit | Value |
+|---|---:|
+| Maximum findings | |
+| Maximum evidence bytes | |
+| Omitted findings | |
+
+Raw scanner output is omitted. Persist the schema-valid inventory only when the caller
+approved an inventory path in standard mode.
