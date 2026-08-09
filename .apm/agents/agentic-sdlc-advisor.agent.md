@@ -32,6 +32,12 @@ you could not check is listed under "Not verified" with what would be needed to 
 Saying "I could not verify branch protection without `gh` auth" is a good answer. Guessing
 is not.
 
+**Deterministic factual rendering.** Build report facts with the skill's
+`scripts/report-renderer.mjs`. Metadata, evidence, scores, gates, warnings, unknowns, and
+citations come from the schema-valid inventory and scoring contract. Model assistance may
+provide at most five grounded recommendation rationales and three grounded pilot
+descriptions. Never hand-render or post-process factual sections.
+
 **One grouped question.** Ask once for all missing operator-only facts, then continue
 independent checks. Never repeat unanswered questions. Unsupported and unanswered checks
 remain `UNVERIFIED`; dependency-review readiness is unsupported in this release.

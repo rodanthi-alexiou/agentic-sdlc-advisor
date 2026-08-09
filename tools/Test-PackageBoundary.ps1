@@ -79,6 +79,7 @@ function Test-PackageBoundary {
         'skills/agentic-sdlc-audit/scripts/evidence-scoring.mjs'
         'skills/agentic-sdlc-audit/scripts/github-remote-adapter.mjs'
         'skills/agentic-sdlc-audit/scripts/local-collector.mjs'
+        'skills/agentic-sdlc-audit/scripts/report-renderer.mjs'
         'skills/agentic-sdlc-audit/scripts/scan.sh'
         'plugin.json'
     )

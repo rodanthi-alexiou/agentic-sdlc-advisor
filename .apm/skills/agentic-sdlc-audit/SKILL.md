@@ -78,9 +78,11 @@ Phase 2, `--probe` verifies dispatch only; Phase 3 supplies collection.
 apm run audit
 ```
 
-The collector emits a schema-valid inventory. If dispatch or collection is unavailable,
-record the prerequisite failure and continue with independent manual checks. Do not parse
-the legacy `scan.sh` prose as structured evidence.
+The dispatcher returns the deterministic compact report by default. Internal evaluation
+and approved diagnostic workflows may request the schema-valid inventory explicitly with
+`--format inventory`. If dispatch or collection is unavailable, record the prerequisite
+failure and continue with independent manual checks. Do not parse the legacy `scan.sh`
+prose as structured evidence.
 
 Remote inspection is optional and capability-aware. Parse the configured remote with
 `scripts/github-remote-adapter.mjs`, then attempt read-only repository metadata only when
@@ -169,9 +171,17 @@ success metric, the review owner, and the explicit stop condition.
 
 ### Phase 5 — Write the report
 
-Follow `assets/report-template.md` exactly. Non-negotiable properties:
+Build the factual view with `scripts/report-renderer.mjs` and follow the contract in
+`assets/report-template.md`. Metadata, findings, scores, advancement gates, unknowns,
+warnings, truncation facts, and evidence citations come only from the schema-valid
+inventory and `scripts/evidence-scoring.mjs`. Model assistance is limited to the bounded
+recommendation and pilot fields accepted by the renderer.
+
+Non-negotiable properties:
 
 - Every recommendation has an owner-facing rationale and at least one citation.
+- Provide no more than five recommendations and three pilots. The renderer rejects
+  larger collections.
 - Recommendations are ordered by **(impact × confidence) ÷ effort**, not by pillar order.
 - Each recommendation states the concrete artifact to create, its exact path, and the
   acceptance criterion that proves it worked.
@@ -182,7 +192,8 @@ Follow `assets/report-template.md` exactly. Non-negotiable properties:
 
 In standard mode, write the report only to the caller-approved path and write inventory
 only when a separate path was approved. In strict mode, return equivalent report content
-without writing. Offer, but do not assume, a follow-up implementation PR.
+without writing. Never hand-render or post-process deterministic factual sections. Offer,
+but do not assume, a follow-up implementation PR.
 
 ### Phase 6 — Implementation (only on explicit request)
 

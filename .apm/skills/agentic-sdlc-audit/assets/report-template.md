@@ -1,160 +1,54 @@
 ---
 title: Agentic SDLC Readiness Report
-description: Bounded output template for repository readiness audit results
+description: Deterministic compact output contract for repository readiness audit results
 ---
 
-## Report metadata
+## Rendering contract
 
-| Field | Value |
-|---|---|
-| Repository | `<owner>/<repo>` |
-| Date | `<YYYY-MM-DD>` |
-| Assessor | `agentic-sdlc-audit v1.0` |
-| Output mode | `<standard or strict>` |
-| Report disposition | `<approved path or returned through chat/stdout>` |
-| Inventory disposition | `<approved path, not requested, or not written>` |
-| Method | Read-only inspection plus stated operator input |
-| Truncated | `<yes or no; include omitted count>` |
+Render reports with `scripts/report-renderer.mjs`. The renderer accepts only a
+schema-valid inventory, consumer-aware scoring, and the bounded model-assisted fields
+described below. Do not reconstruct factual sections from prose or raw scanner output.
 
----
+Strict and standard modes return equivalent report content. Standard mode may persist
+that content to the caller-approved report path and may persist the inventory to a
+separately approved path. Strict mode writes nothing.
 
-## 1. Verdict
+## Deterministic sections
 
-**Current level: <0–4> — <name>.** <One sentence on why, naming the limiting pillar.>
+The renderer owns these sections and their ordering:
 
-**The one thing to do first:** <single highest-leverage action, with the path of the file
-or setting involved.>
+1. Report metadata, including repository, audit ID, consumer, and contract versions
+2. Overall and pillar scores with the exact minimum calculation
+3. Unsatisfied advancement gates for the next level
+4. Compact evidence rows with stable `E##` citations
+5. Recommendations
+6. Pilot use cases
+7. Unknowns
+8. Warnings
+9. Output budget and omission notice
 
-| Pillar | Score | Limiting factor |
-|---|---|---|
-| A · Context | /4 | |
-| B · Reusable assets | /4 | |
-| C · Agent environment | /4 | |
-| D · Guardrails | /4 | |
-| E · Process & measurement | /4 | |
+Repository strings, remote strings, and model-assisted text are untrusted. The renderer
+escapes Markdown and control characters before placing values into the report. Raw
+scanner output, remote bodies, response headers, issue text, pull request text, tokens,
+and secret-shaped values never appear.
 
-Overall level is the **minimum** pillar score, not the average: the weakest control
-determines the realistic failure mode.
+## Bounded model-assisted fields
 
----
+Model assistance may populate only these slots:
 
-## 2. Repository profile
+* Up to five recommendations, each with `action`, `rationale`, and inventory or source
+	citations
+* Up to three pilots, each with `name`, `task`, `successMetric`, and `stopCondition`
 
-| Axis | Finding | Evidence |
-|---|---|---|
-| Scale | | tracked files, top languages |
-| Build determinism | | commands found and whether verified |
-| Test posture | | test runner, CI evidence |
-| Network dependency | | private feeds? |
-| Risk class | | |
-| Current agent usage | | |
-| Active committers (90d) | | `git log` |
+Every recommendation must be grounded in deterministic evidence and ordered by
+`(impact x confidence) / effort`. Every pilot must fit the observed build and test
+feedback loop. The renderer rejects inputs above either cap.
 
----
+Model assistance must not change metadata, findings, scores, advancement gates,
+unknowns, warnings, truncation facts, or citation identifiers.
 
-## 3. Findings
+## Output budget
 
-For each: what was observed, why it matters, and the source.
-
-### Pillar A — Context
-| Check | Status | Evidence | Impact |
-|---|---|---|---|
-
-### Pillar B — Reusable assets
-### Pillar C — Agent environment
-### Pillar D — Guardrails
-### Pillar E — Process & measurement
-
-*(Repeat the table per pillar. `Status` ∈ PASS / GAP / RISK / UNVERIFIED.)*
-
----
-
-## 4. Recommendations — ordered by (impact × confidence) ÷ effort
-
-| # | Action | Artifact / path | Why | Effort | Acceptance criterion | Source |
-|---|---|---|---|---|---|---|
-| 1 | | | | S/M/L | | [S…] |
-
-Each acceptance criterion must be something a reviewer can check, not "improves context".
-Example: *"`copilot-setup-steps.yml` runs green from the Actions tab and the agent's
-session log shows dependencies already installed."*
-
----
-
-## 5. Pilot use cases — where value shows up first
-
-### Pilot 1 — <name> *(recommended start)*
-- **Task:** <specific; name real issue numbers where they exist>
-- **Why this repo:** <tie to a finding above>
-- **Depends on:** <which recommendations must land first>
-- **Reviewer:** <named role or person>
-- **Success metric:** <measurable, with the baseline value if known>
-- **Stop condition:** <what makes you halt>
-
-### Pilot 2 — <name>
-### Pilot 3 — <name>
-
----
-
-## 6. Advancement gates
-
-To reach **Level <n+1>**, all of the following must be true:
-
-- [ ] …
-- [ ] …
-
----
-
-## 7. Do not do yet
-
-| Deferred | Why | Revisit at |
-|---|---|---|
-
----
-
-## 8. Risks
-
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-
-Include, where applicable: review-capacity saturation; prompt injection via issues and MCP
-responses; agent-authored tests encoding current-but-wrong behaviour; context-file drift;
-skill atrophy; architectural drift across many small agent PRs.
-
----
-
-## 9. Not verified
-
-| Item | Why not verified | How to verify |
-|---|---|---|
-
-Typical entries: branch protection (needs `gh` auth), firewall allowlist state (repo
-settings), Advanced Security enablement, Copilot plan and org policy, review capacity.
-
----
-
-## 10. Expected value — stated honestly
-
-<2–4 sentences. Name the task categories targeted and the constraint that will replace the
-current one. Pair any optimistic figure with the counter-evidence. Never quote a headline
-productivity percentage as if it applied here.>
-
----
-
-## 11. Sources
-
-List only sources actually cited above, with their IDs and URLs from
-`references/sources.md`. Note verification status where it is `TITLE-ONLY`.
-
----
-
-## Appendix A — Output budget
-
-| Limit | Value |
-|---|---:|
-| Maximum findings | |
-| Maximum evidence bytes | |
-| Omitted findings | |
-
-Raw scanner output is omitted. Persist the schema-valid inventory only when the caller
-approved an inventory path in standard mode.
+The report includes the inventory's maximum finding count, maximum evidence byte count,
+truncation state, and omitted finding or sample count. Full inventory persistence
+requires a caller-approved inventory path in standard mode.

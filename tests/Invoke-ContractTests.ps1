@@ -120,6 +120,27 @@ function Invoke-NodeJson {
     return ($Output -join [Environment]::NewLine) | ConvertFrom-Json
 }
 
+function Invoke-NodeText {
+    <#
+    .SYNOPSIS
+        Runs a Node.js script and returns its text stdout.
+    .OUTPUTS
+        System.String.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string[]]$Arguments
+    )
+
+    $Output = @(& node @Arguments 2>&1)
+    if ($LASTEXITCODE -ne 0) {
+        throw "Node command failed:`n$($Output -join [Environment]::NewLine)"
+    }
+    return $Output -join [Environment]::NewLine
+}
+
 function Invoke-Git {
     <#
     .SYNOPSIS
@@ -206,6 +227,9 @@ if ($MyInvocation.InvocationName -ne '.') {
         Assert-Condition -Condition ($Probe.dispatcher -eq 'node') -Message 'Dispatch runtime mismatch.'
 
         $HarnessPath = Join-Path $RepoRoot 'tests/contract-harness.mjs'
+        $RendererContractsPath = Join-Path $RepoRoot 'tests/report-renderer-contracts.mjs'
+        $RendererOutput = @(& node $RendererContractsPath 2>&1)
+        Assert-Condition -Condition ($LASTEXITCODE -eq 0) -Message "Report renderer contracts failed:`n$($RendererOutput -join [Environment]::NewLine)"
         $Phase4ContractsPath = Join-Path $RepoRoot 'tests/phase4-contracts.mjs'
         $Phase4Output = @(& node $Phase4ContractsPath 2>&1)
         Assert-Condition -Condition ($LASTEXITCODE -eq 0) -Message "Phase 4 contracts failed:`n$($Phase4Output -join [Environment]::NewLine)"
@@ -228,12 +252,26 @@ if ($MyInvocation.InvocationName -ne '.') {
         Assert-Condition -Condition $MergedInventoryValid -Message 'Normalized remote findings produced an invalid merged inventory.'
 
         $TempRoot = Join-Path ([System.IO.Path]::GetTempPath()) "advisor-contract-$([guid]::NewGuid())"
+        $RemoteBodyCanary = 'COMPLETE_REMOTE_BODY_MUST_NOT_LEAK_4f28bfe1'
+        $UnsafeRemoteFixturePath = Join-Path $TempRoot 'unsafe-remote.json'
+        New-Item -Path $TempRoot -ItemType Directory -Force | Out-Null
+        @{
+            control = 'required-status-checks'
+            endpoint = 'GET /repos/example/repository/rules/branches/main'
+            responseClass = 'success'
+            body = $RemoteBodyCanary
+        } | ConvertTo-Json | Set-Content -Path $UnsafeRemoteFixturePath
+        $UnsafeRemoteOutput = @(& node $HarnessPath --normalize-http $UnsafeRemoteFixturePath 2>&1) -join [Environment]::NewLine
+        Assert-Condition -Condition ($LASTEXITCODE -ne 0) -Message 'Remote normalization accepted a raw response body.'
+        Assert-Condition -Condition (-not $UnsafeRemoteOutput.Contains($RemoteBodyCanary)) -Message 'Remote normalization leaked the complete raw body through logs.'
+
         $CollectorRoot = New-GitFixture -Path (Join-Path $TempRoot 'collector')
         $ObservedAt = '2026-08-08T00:00:00.000Z'
         $CollectorArguments = @(
             $DispatcherPath,
             '--repo', $CollectorRoot,
             '--mode', 'strict',
+            '--format', 'inventory',
             '--observed-at', $ObservedAt
         )
         $CollectorBefore = Get-DirectorySnapshot -Path $CollectorRoot
@@ -286,14 +324,14 @@ if ($MyInvocation.InvocationName -ne '.') {
         New-Item -Path $UnbornRoot -ItemType Directory -Force | Out-Null
         Invoke-Git -Path $UnbornRoot -Arguments @('init', '--initial-branch=feature') | Out-Null
         Set-Content -Path (Join-Path $UnbornRoot 'AGENTS.md') -Value '# Unborn'
-        $UnbornInventory = Invoke-NodeJson -Arguments @($DispatcherPath, '--repo', $UnbornRoot, '--mode', 'strict', '--observed-at', $ObservedAt)
+        $UnbornInventory = Invoke-NodeJson -Arguments @($DispatcherPath, '--repo', $UnbornRoot, '--mode', 'strict', '--format', 'inventory', '--observed-at', $ObservedAt)
         Assert-Condition -Condition ($UnbornInventory.repository.git.state -eq 'unborn') -Message 'Unborn repository was not identified.'
         Assert-Condition -Condition ($UnbornInventory.repository.currentBranch -eq 'feature') -Message 'Unborn branch identity was not retained.'
 
         $NoRepositoryRoot = Join-Path $TempRoot 'no-repository'
         New-Item -Path $NoRepositoryRoot -ItemType Directory -Force | Out-Null
         Set-Content -Path (Join-Path $NoRepositoryRoot 'AGENTS.md') -Value '# No repository'
-        $NoRepositoryInventory = Invoke-NodeJson -Arguments @($DispatcherPath, '--repo', $NoRepositoryRoot, '--mode', 'strict', '--observed-at', $ObservedAt)
+        $NoRepositoryInventory = Invoke-NodeJson -Arguments @($DispatcherPath, '--repo', $NoRepositoryRoot, '--mode', 'strict', '--format', 'inventory', '--observed-at', $ObservedAt)
         Assert-Condition -Condition ($NoRepositoryInventory.repository.git.state -eq 'no-repository') -Message 'Non-Git directory was not identified.'
         Assert-Condition -Condition (($NoRepositoryInventory.findings | Where-Object id -eq 'root-agents').status -eq 'local-only') -Message 'Non-Git control presence was not retained as local evidence.'
 
@@ -318,7 +356,7 @@ if ($MyInvocation.InvocationName -ne '.') {
         Set-Content -Path (Join-Path $DiscoveryRoot '.gitignore') -Value 'ignored/'
         Invoke-Git -Path $DiscoveryRoot -Arguments @('add', '.') | Out-Null
         Invoke-Git -Path $DiscoveryRoot -Arguments @('commit', '-m', 'Add discovery controls') | Out-Null
-        $DiscoveryInventory = Invoke-NodeJson -Arguments @($DispatcherPath, '--repo', $DiscoveryRoot, '--mode', 'strict', '--observed-at', $ObservedAt)
+        $DiscoveryInventory = Invoke-NodeJson -Arguments @($DispatcherPath, '--repo', $DiscoveryRoot, '--mode', 'strict', '--format', 'inventory', '--observed-at', $ObservedAt)
         $DiscoveryIds = @($DiscoveryInventory.findings.id)
         foreach ($ExpectedId in @('nested-agents', 'build-manifests', 'pull-request-templates', 'agent-skills', 'security-policy', 'architecture-decisions')) {
             Assert-Condition -Condition ($DiscoveryIds -contains $ExpectedId) -Message "Discovery omitted '$ExpectedId'."
@@ -333,7 +371,7 @@ if ($MyInvocation.InvocationName -ne '.') {
         $CanaryInventoryJson = @(& node $DispatcherPath --repo $DiscoveryRoot --mode strict --observed-at $ObservedAt 2>&1) -join [Environment]::NewLine
         Assert-Condition -Condition ($LASTEXITCODE -eq 0) -Message 'Adversarial repository text changed collector execution.'
         Assert-Condition -Condition (-not $CanaryInventoryJson.Contains($Canary)) -Message 'Secret-shaped repository data was emitted without redaction.'
-        Assert-Condition -Condition ($CanaryInventoryJson.Contains('[REDACTED]')) -Message 'Secret-shaped repository data was not marked as redacted.'
+        Assert-Condition -Condition ($CanaryInventoryJson.Contains('REDACTED')) -Message 'Secret-shaped repository data was not marked as redacted.'
 
         $LargeRoot = New-GitFixture -Path (Join-Path $TempRoot 'large')
         New-Item -Path (Join-Path $LargeRoot '.github/instructions') -ItemType Directory -Force | Out-Null
@@ -342,7 +380,7 @@ if ($MyInvocation.InvocationName -ne '.') {
         }
         Invoke-Git -Path $LargeRoot -Arguments @('add', '.') | Out-Null
         Invoke-Git -Path $LargeRoot -Arguments @('commit', '-m', 'Add one thousand controls') | Out-Null
-        $LargeInventory = Invoke-NodeJson -Arguments @($DispatcherPath, '--repo', $LargeRoot, '--mode', 'strict', '--observed-at', $ObservedAt)
+        $LargeInventory = Invoke-NodeJson -Arguments @($DispatcherPath, '--repo', $LargeRoot, '--mode', 'strict', '--format', 'inventory', '--observed-at', $ObservedAt)
         $LargeFinding = $LargeInventory.findings | Where-Object id -eq 'path-instructions'
         Assert-Condition -Condition ($LargeFinding.discovery.totalCount -eq 1000) -Message 'Large discovery total was not preserved.'
         Assert-Condition -Condition ($LargeFinding.discovery.sampleCount -eq 20) -Message 'Large discovery sample was not bounded.'
@@ -352,15 +390,42 @@ if ($MyInvocation.InvocationName -ne '.') {
         Assert-Condition -Condition ($LargeInventoryBytes -le $LargeInventory.outputBudget.maxEvidenceBytes) -Message 'Large discovery exceeded the configured byte budget.'
 
         $ApprovedInventoryPath = Join-Path $TempRoot 'approved/collector-inventory.json'
+        $ApprovedCollectorReportPath = Join-Path $TempRoot 'approved/collector-report.md'
         $StandardInventory = Invoke-NodeJson -Arguments @(
             $DispatcherPath,
             '--repo', $DiscoveryRoot,
             '--mode', 'standard',
+            '--format', 'inventory',
+            '--report-path', $ApprovedCollectorReportPath,
             '--inventory-path', $ApprovedInventoryPath,
             '--observed-at', $ObservedAt
         )
         Assert-Condition -Condition (Test-Path -Path $ApprovedInventoryPath -PathType Leaf) -Message 'Standard collector mode did not write the approved inventory.'
+        Assert-Condition -Condition (Test-Path -Path $ApprovedCollectorReportPath -PathType Leaf) -Message 'Standard collector mode did not write the approved report.'
         Assert-Condition -Condition ((Get-Content -Path $ApprovedInventoryPath -Raw | ConvertFrom-Json).auditId -eq $StandardInventory.auditId) -Message 'Persisted collector inventory differs from stdout.'
+        Assert-Condition -Condition (-not (Get-Content -Path $ApprovedInventoryPath -Raw).Contains($Canary)) -Message 'Persisted inventory leaked a secret-shaped repository value.'
+        Assert-Condition -Condition (-not (Get-Content -Path $ApprovedCollectorReportPath -Raw).Contains($Canary)) -Message 'Persisted report leaked a secret-shaped repository value.'
+
+        $StrictProductReport = Invoke-NodeText -Arguments @(
+            $DispatcherPath,
+            '--repo', $DiscoveryRoot,
+            '--mode', 'strict',
+            '--observed-at', $ObservedAt
+        )
+        $ApprovedProductReportPath = Join-Path $TempRoot 'approved/product-report.md'
+        $StandardProductReport = Invoke-NodeText -Arguments @(
+            $DispatcherPath,
+            '--repo', $DiscoveryRoot,
+            '--mode', 'standard',
+            '--report-path', $ApprovedProductReportPath,
+            '--observed-at', $ObservedAt
+        )
+        Assert-Condition -Condition ($StrictProductReport -eq $StandardProductReport) -Message 'Strict and standard product reports differ.'
+        $PersistedProductReport = (Get-Content -Path $ApprovedProductReportPath -Raw).Replace("`r`n", "`n").TrimEnd()
+        $NormalizedStandardProductReport = $StandardProductReport.Replace("`r`n", "`n").TrimEnd()
+        Assert-Condition -Condition ($PersistedProductReport -eq $NormalizedStandardProductReport) -Message 'Persisted product report differs from stdout.'
+        Assert-Condition -Condition $StrictProductReport.Contains('## Report metadata') -Message 'Product dispatcher did not emit compact report metadata.'
+        Assert-Condition -Condition $StrictProductReport.Contains('Raw scanner output is omitted.') -Message 'Product report omitted the raw-output trust notice.'
 
         $FailureOutput = @(& node $DispatcherPath --repo (Join-Path $TempRoot 'missing') --mode strict --observed-at $ObservedAt 2>&1)
         Assert-Condition -Condition ($LASTEXITCODE -ne 0) -Message 'Missing repository setup failure exited successfully.'
@@ -382,14 +447,8 @@ if ($MyInvocation.InvocationName -ne '.') {
             }
             Assert-Condition -Condition ($StartExitCode -eq 0) -Message 'APM start did not complete local collection.'
             Assert-Condition -Condition ($AuditExitCode -eq 0) -Message 'APM audit did not complete local collection.'
-            $StartJson = $StartOutput | Where-Object { ([string]$_).TrimStart().StartsWith('{') } | Select-Object -Last 1
-            $AuditJson = $AuditOutput | Where-Object { ([string]$_).TrimStart().StartsWith('{') } | Select-Object -Last 1
-            Assert-Condition -Condition ($null -ne $StartJson) -Message 'APM start did not emit collector JSON.'
-            Assert-Condition -Condition ($null -ne $AuditJson) -Message 'APM audit did not emit collector JSON.'
-            $StartInventory = $StartJson | ConvertFrom-Json
-            $AuditInventory = $AuditJson | ConvertFrom-Json
-            Assert-Condition -Condition ($StartInventory.schemaVersion -eq '1.0.0') -Message 'APM start did not route to the collector.'
-            Assert-Condition -Condition ($AuditInventory.schemaVersion -eq '1.0.0') -Message 'APM audit did not route to the collector.'
+            Assert-Condition -Condition (($StartOutput -join [Environment]::NewLine).Contains('## Report metadata')) -Message 'APM start did not emit a compact report.'
+            Assert-Condition -Condition (($AuditOutput -join [Environment]::NewLine).Contains('## Report metadata')) -Message 'APM audit did not emit a compact report.'
         }
 
         $StrictRoot = Join-Path $TempRoot 'strict'

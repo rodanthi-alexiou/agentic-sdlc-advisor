@@ -24,7 +24,8 @@ report the overall level, because a strong pillar cannot compensate for a missin
 
 Steps:
 
-1. Invoke the skill's APM audit command for the schema-valid inventory.
+1. Invoke the skill's APM audit command through its deterministic dispatcher. Request
+   inventory format only when structured evidence is needed for the audit workflow.
 2. Profile the repository per Phase 2 of the skill.
 3. Score the five pillars against
    the skill\'s `references/rubric.md`, recording
@@ -34,15 +35,17 @@ Steps:
 5. Select three ranked pilots from
    the skill\'s `references/use-cases.md`,
    naming real issues from this repo where they exist.
-6. Render the report using the skill's `assets/report-template.md`. In standard mode,
+6. Build the report with the skill's `scripts/report-renderer.mjs` under the contract in
+   `assets/report-template.md`. Do not hand-render factual sections. In standard mode,
    write only to the approved report and optional inventory paths. In strict mode, return
-   the same report content without writing,
-   citing only from
-   the skill's `references/sources.md`.
+   the same report content without writing. Cite only from the skill's
+   `references/sources.md`.
 
 Ask at most once for all non-discoverable facts: team size, Copilot plan, regulated
 domain, firewall state, and whether the coding agent has been used. Continue independent
 checks without an answer. Unanswered and unsupported checks, including dependency-review
 readiness, remain `UNVERIFIED`.
 
-Do not recommend more than five actions. Order them by leverage, not by pillar.
+Do not recommend more than five actions or more than three pilots. Model assistance is
+limited to those bounded recommendation and pilot fields. It must not alter evidence,
+scores, gates, warnings, unknowns, or citations. Order actions by leverage, not by pillar.

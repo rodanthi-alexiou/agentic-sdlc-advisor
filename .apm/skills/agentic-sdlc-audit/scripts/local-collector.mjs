@@ -445,7 +445,7 @@ export async function collectLocalInventory(options = {}) {
   const inventory = {
     schemaVersion: "1.0.0",
     auditId: createHash("sha256")
-      .update(`${gitFacts.headCommit ?? "no-head"}|${observedAt}|${mode}`)
+      .update(`${gitFacts.headCommit ?? "no-head"}|${observedAt}`)
       .digest("hex")
       .slice(0, 24),
     mode,
