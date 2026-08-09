@@ -230,6 +230,7 @@ if ($MyInvocation.InvocationName -ne '.') {
         $RendererContractsPath = Join-Path $RepoRoot 'tests/report-renderer-contracts.mjs'
         $RendererOutput = @(& node $RendererContractsPath 2>&1)
         Assert-Condition -Condition ($LASTEXITCODE -eq 0) -Message "Report renderer contracts failed:`n$($RendererOutput -join [Environment]::NewLine)"
+        $RendererOutput | ForEach-Object { Write-Host $_ }
         $Phase4ContractsPath = Join-Path $RepoRoot 'tests/phase4-contracts.mjs'
         $Phase4Output = @(& node $Phase4ContractsPath 2>&1)
         Assert-Condition -Condition ($LASTEXITCODE -eq 0) -Message "Phase 4 contracts failed:`n$($Phase4Output -join [Environment]::NewLine)"

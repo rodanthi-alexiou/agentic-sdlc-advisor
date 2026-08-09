@@ -76,4 +76,6 @@ assert.throws(
   /more than 3/u,
 );
 
-process.stdout.write("Compact report renderer contracts passed.\n");
+process.stdout.write(
+  "Compact report renderer contracts passed: adversarial Markdown injection and secret canary redaction.\n",
+);
