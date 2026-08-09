@@ -18,6 +18,9 @@ The approved publisher and release repository are
 `rodanthi-alexiou/agentic-sdlc-advisor`. APM CLI 0.26.0 is the minimum supported version
 for package validation and release.
 
+The current release candidate is `1.1.0-rc.1`. It remains distinct from the final
+release while the repository pilot is deferred.
+
 ## Distribution options
 
 Three options. They are not alternatives — they stack. Pick based on **how many
@@ -161,6 +164,71 @@ missing or unexpected release files. It does not validate or synchronize `.githu
 If you know from the start you want to ship a plugin, scaffold with
 `apm plugin init agentic-sdlc-advisor`, which writes `plugin.json` alongside `apm.yml`
 from day one.
+
+### Package and smoke-test the release candidate
+
+Use APM CLI 0.26.0 and package from a detached temporary worktree. APM 0.26.0 synthesizes
+`.github/plugin/plugin.json` while packing when the source has no committed `plugin.json`.
+The temporary worktree keeps that generated file out of the authoritative checkout and
+the deferred standalone mirror.
+
+Run this workflow after the candidate changes are committed locally. It does not push or
+publish the commit.
+
+```powershell
+$ApmVersion = '0.26.0'
+$CandidateVersion = '1.1.0-rc.1'
+$TemporaryRoot = Join-Path ([System.IO.Path]::GetTempPath()) "agentic-sdlc-advisor-$CandidateVersion"
+$PackageSource = Join-Path $TemporaryRoot 'source'
+$PackageOutput = Join-Path $TemporaryRoot 'package'
+$InstallRoot = Join-Path $TemporaryRoot 'install'
+
+$DetectedVersion = apm --version 2>&1 | Out-String
+if ($DetectedVersion -notmatch "version $([regex]::Escape($ApmVersion))") {
+   throw "APM $ApmVersion is required. Found: $DetectedVersion"
+}
+
+New-Item -ItemType Directory -Path $TemporaryRoot, $PackageOutput, $InstallRoot -Force |
+   Out-Null
+git worktree add --detach $PackageSource HEAD
+try {
+   Push-Location $PackageSource
+   try {
+      if ((Get-Content apm.yml -Raw) -notmatch "(?m)^version: $([regex]::Escape($CandidateVersion))$") {
+         throw "Expected candidate version $CandidateVersion in apm.yml."
+      }
+      apm compile --validate
+      if ($LASTEXITCODE -ne 0) { throw 'APM compile validation failed.' }
+      apm pack --dry-run --verbose
+      if ($LASTEXITCODE -ne 0) { throw 'APM pack preview failed.' }
+      apm pack --archive --output $PackageOutput
+      if ($LASTEXITCODE -ne 0) { throw 'APM archive packing failed.' }
+   }
+   finally {
+      Pop-Location
+   }
+
+   $Artifact = Join-Path $PackageOutput "agentic-sdlc-advisor-$CandidateVersion.zip"
+   apm install $Artifact --root $InstallRoot --target copilot --as agentic-sdlc-advisor
+   if ($LASTEXITCODE -ne 0) { throw 'Scratch installation failed.' }
+
+   $Dispatcher = Join-Path $InstallRoot '.agents/skills/agentic-sdlc-audit/scripts/audit-dispatch.mjs'
+   node $Dispatcher --repo $InstallRoot --mode strict
+   if ($LASTEXITCODE -ne 0) { throw 'Compact report smoke test failed.' }
+   node $Dispatcher --repo $InstallRoot --mode strict --format inventory
+   if ($LASTEXITCODE -ne 0) { throw 'Full inventory smoke test failed.' }
+
+   Write-Output "Candidate artifact: $Artifact"
+}
+finally {
+   git worktree remove --force $PackageSource
+}
+```
+
+The archive is the release-candidate artifact. A local plugin archive does not retain the
+source manifest scripts, so scratch smoke tests invoke the installed dispatcher under
+`.agents/skills/`. Source-checkout validation continues to exercise the public `apm run`
+and `apm run audit` aliases through `tests/Invoke-ContractTests.ps1`.
 
 ---
 

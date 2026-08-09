@@ -36,9 +36,26 @@ Three options — see [DISTRIBUTION.md](DISTRIBUTION.md) for the full comparison
 distribution remains unsupported until its retention and generation policy are approved.
 
 **Many repos (recommended):** ship as an [APM](https://microsoft.github.io/apm/) package.
-Source lives in `.apm/`, the manifest is `apm.yml`. Consumers add
-`rodanthi-alexiou/agentic-sdlc-advisor#v1.0.0` to their dependencies and run
-`apm install`.
+Source lives in `.apm/`, and the manifest is `apm.yml`. To test the current prerelease,
+install it directly in the repository you want to audit:
+
+```bash
+apm install rodanthi-alexiou/agentic-sdlc-advisor#v1.1.0-rc.1 --target copilot
+```
+
+To manage it as a pinned dependency, add the following entry to the target repository's
+`apm.yml`, then run `apm install`:
+
+```yaml
+dependencies:
+  apm:
+    - rodanthi-alexiou/agentic-sdlc-advisor#v1.1.0-rc.1
+```
+
+> [!IMPORTANT]
+> `v1.1.0-rc.1` is a prerelease candidate for evaluation. It has passed package and
+> cross-platform contract tests, but it has not completed the 12-repository pilot required
+> for promotion to the final `v1.1.0` release.
 
 **Without APM:** `apm pack` produces a plugin bundle for plugin-aware hosts.
 
@@ -69,11 +86,75 @@ assign it to Copilot with the custom agent selected. The report comes back as a 
 The skill triggers on natural phrasing too — "are we set up for the coding agent?", "why do
 our agent PRs keep failing?", "what should our AGENTS.md say?"
 
-The package exposes one provisional APM dispatch path through both `apm run` and
-`apm run audit`. Node.js is the provisional runtime while the Windows, Ubuntu, and macOS
-probe matrix is pending. `apm run audit` returns an explicit not-implemented result until
-Phase 3 adds collection; `node .apm/skills/agentic-sdlc-audit/scripts/audit-dispatch.mjs
---probe` verifies the Phase 2 launcher.
+The package exposes equivalent APM dispatch paths through `apm run` and `apm run audit`.
+Node.js is the supported shared runtime after validation on Windows, Ubuntu, and macOS.
+
+## Prompting techniques
+
+Start with a broad audit when you want the maturity verdict and the highest-leverage next
+steps:
+
+```text
+/agentic-sdlc-audit
+```
+
+Add known operating context in the same prompt. This reduces `UNVERIFIED` findings and
+helps the advisor right-size its recommendations:
+
+```text
+/agentic-sdlc-audit Team of 8, Copilot Enterprise, customer-facing but not regulated,
+private NuGet feed behind a firewall, coding agent used on test maintenance.
+```
+
+Name a focus when one area matters most. The report still includes the overall maturity
+level because a strong area cannot compensate for a missing release gate:
+
+```text
+/agentic-sdlc-audit Focus on branch protection, required checks, CODEOWNERS, and secret
+scanning. Explain which gaps are verified and which require GitHub access.
+```
+
+Describe a concrete failure when troubleshooting adoption:
+
+```text
+Use the agentic-sdlc-audit skill. Our coding-agent pull requests often fail during setup
+because they cannot restore private dependencies. Identify the evidence, likely blocker,
+and smallest pilot that can prove the fix.
+```
+
+Ask for strict mode when you want a read-only result in chat with no file writes:
+
+```text
+Audit this repository in strict mode. Return the compact report in chat and do not write
+any files.
+```
+
+Approve exact paths when you want durable artifacts. The report and full inventory need
+separate approval:
+
+```text
+Audit this repository in standard mode. Write the report to
+docs/agentic-sdlc-readiness.md and the full inventory to
+artifacts/agentic-sdlc-inventory.json. Do not modify any other path.
+```
+
+Use follow-up prompts to challenge or operationalize the result without changing the
+evidence:
+
+```text
+For each UNVERIFIED finding, tell me the minimum access or operator answer needed to
+verify it.
+
+Turn the top recommendation into acceptance criteria and a review checklist. Do not
+implement it yet.
+
+Compare the three proposed pilots by expected learning value, reviewer effort, and stop
+condition.
+```
+
+The advisor may ask one grouped question for facts it cannot discover: team size, Copilot
+plan, regulated-domain status, firewall state, and prior coding-agent use. You may skip
+the question. Missing facts remain `UNVERIFIED`; they are never guessed.
 
 ## The output
 

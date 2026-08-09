@@ -1,5 +1,5 @@
 name: agentic-sdlc-advisor
-version: 1.0.0
+version: 1.1.0-rc.1
 description: >-
   Audits a repository's readiness for agent-driven development with GitHub Copilot and
   produces a cited, prioritized adoption report with pilot use cases. Read-only.
