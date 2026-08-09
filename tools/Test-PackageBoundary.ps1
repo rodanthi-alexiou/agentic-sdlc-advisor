@@ -76,6 +76,7 @@ function Test-PackageBoundary {
         'skills/agentic-sdlc-audit/schemas/examples/strict-unverified-inventory.json'
         'skills/agentic-sdlc-audit/schemas/inventory-v1.schema.json'
         'skills/agentic-sdlc-audit/scripts/audit-dispatch.mjs'
+        'skills/agentic-sdlc-audit/scripts/local-collector.mjs'
         'skills/agentic-sdlc-audit/scripts/scan.sh'
         'plugin.json'
     )

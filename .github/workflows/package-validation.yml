@@ -49,6 +49,10 @@ jobs:
         shell: pwsh
         run: ./tools/Invoke-RuntimeMatrixProbe.ps1 -OutputPath artifacts/runtime-probe.json
 
+      - name: Run local collector contracts
+        shell: pwsh
+        run: ./tests/Invoke-ContractTests.ps1
+
       - name: Upload runtime probe
         uses: actions/upload-artifact@v4
         with:
@@ -76,6 +80,6 @@ jobs:
         shell: pwsh
         run: ./tools/Test-PackageBoundary.ps1
 
-      - name: Run Phase 2 contract tests
+      - name: Run Phase 3 contract tests
         shell: pwsh
         run: ./tests/Invoke-ContractTests.ps1

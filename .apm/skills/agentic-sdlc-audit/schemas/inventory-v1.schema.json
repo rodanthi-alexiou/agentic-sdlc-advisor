@@ -48,6 +48,9 @@
     },
     "outputBudget": {
       "$ref": "#/definitions/outputBudget"
+    },
+    "collection": {
+      "$ref": "#/definitions/collection"
     }
   },
   "definitions": {
@@ -84,6 +87,9 @@
               "$ref": "#/definitions/observation"
             }
           }
+        },
+        "git": {
+          "$ref": "#/definitions/gitEvidence"
         }
       }
     },
@@ -148,6 +154,9 @@
         "trust": {
           "$ref": "#/definitions/trust"
         },
+        "discovery": {
+          "$ref": "#/definitions/discovery"
+        },
         "warnings": {
           "type": "array",
           "items": {
@@ -159,6 +168,101 @@
           "items": {
             "$ref": "#/definitions/unknown"
           }
+        }
+      }
+    },
+    "gitEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "headCommit", "indexAvailable", "remoteHead"],
+      "properties": {
+        "state": {
+          "enum": ["branch", "detached", "unborn", "no-repository", "git-unavailable"]
+        },
+        "headCommit": {
+          "type": ["string", "null"]
+        },
+        "indexAvailable": {
+          "type": "boolean"
+        },
+        "remoteHead": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/definitions/remoteHead" }
+          ]
+        }
+      }
+    },
+    "remoteHead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "remote", "status", "source", "observation", "confidence"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "remote": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "const": "unverified"
+        },
+        "source": {
+          "$ref": "#/definitions/source"
+        },
+        "observation": {
+          "$ref": "#/definitions/observation"
+        },
+        "confidence": {
+          "const": "local-fallback"
+        }
+      }
+    },
+    "discovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "totalCount",
+        "sampledPaths",
+        "sampleCount",
+        "truncated",
+        "workingTreeCount",
+        "indexCount",
+        "headCount"
+      ],
+      "properties": {
+        "totalCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sampledPaths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "sampleCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "workingTreeCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "indexCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "headCount": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -297,6 +401,33 @@
         "omittedFindingCount": {
           "type": "integer",
           "minimum": 0
+        }
+      }
+    },
+    "collection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "visitedEntryCount",
+        "excludedDirectoryCount",
+        "ignoredDirectoryCount",
+        "traversalTruncated"
+      ],
+      "properties": {
+        "visitedEntryCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "excludedDirectoryCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ignoredDirectoryCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "traversalTruncated": {
+          "type": "boolean"
         }
       }
     }
