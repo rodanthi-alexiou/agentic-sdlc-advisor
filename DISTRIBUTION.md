@@ -97,7 +97,7 @@ apm install
 Or install directly without editing a manifest:
 
 ```bash
-apm install rodanthi-alexiou/agentic-sdlc-advisor#v1.0.0 --target copilot
+apm install rodanthi-alexiou/agentic-sdlc-advisor#v1.1.0-rc.1 --target copilot
 ```
 
 ### Where things land — read this before debugging
