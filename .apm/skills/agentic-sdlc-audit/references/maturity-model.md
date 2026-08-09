@@ -1,4 +1,7 @@
-# Maturity model and advancement gates
+---
+title: Maturity model and advancement gates
+description: Agentic SDLC maturity levels with stable executable advancement gates
+---
 
 Five levels. A team is at the level whose gates it has **all** passed. Skipping levels is
 the most common and most expensive mistake — it produces agent output volume without the
@@ -15,10 +18,11 @@ steps living in people's heads.
 and the team concluding "the technology does not work".
 
 **Gate to Level 1** — all required:
-- [ ] Default branch protected; direct pushes blocked
-- [ ] Required human review on every PR
-- [ ] Build, test, and lint runnable from documented single commands, verified by someone
-- [ ] Secret scanning with push protection enabled
+- [ ] `default-branch-protection`: Default branch protected; direct pushes blocked
+- [ ] `required-human-review`: Required human review on every PR
+- [ ] `build-command-verified` and `test-feedback-loop`: Build, test, and lint runnable
+      from documented single commands, verified by someone
+- [ ] `secret-scanning-push-protection`: Secret scanning with push protection enabled
 
 ---
 
@@ -31,11 +35,13 @@ by the individual.
 `.github/copilot-instructions.md` consistent with the linter.
 
 **Gate to Level 2** — all required:
-- [ ] `AGENTS.md` present, repo-specific, commands verified by execution
-- [ ] Instruction files reviewed in PRs and updated within 90 days
-- [ ] Code scanning enabled and blocking on new high-severity findings
-- [ ] CODEOWNERS routing sensitive paths
-- [ ] A named owner for the context files
+- [ ] `root-agents` and `context-commands-verified`: `AGENTS.md` present, repo-specific,
+      commands verified by execution
+- [ ] `context-maintained`: Instruction files reviewed in PRs and updated within 90 days
+- [ ] `code-scanning-blocking`: Code scanning enabled and blocking on new high-severity
+      findings
+- [ ] `codeowners-sensitive-paths`: CODEOWNERS routing sensitive paths
+- [ ] `context-maintained`: A named owner for the context files
 
 ---
 
@@ -48,13 +54,13 @@ every step. Refactors, test backfill, migration scaffolding.
 first custom agent for a recurring role such as review or test authoring.
 
 **Gate to Level 3** — all required:
-- [ ] `copilot-setup-steps.yml` present, correctly named job, on the default branch,
+- [ ] `copilot-setup-valid`: `copilot-setup-steps.yml` present, correctly named job, on the default branch,
       minimal `permissions`, and manually run once to prove it works
-- [ ] Private dependencies resolve inside the agent environment
-- [ ] Firewall enabled with an explicit allowlist, or disabling justified in writing
-- [ ] Issue template with required problem / acceptance criteria / out-of-scope fields
-- [ ] Baseline metrics captured — DORA four keys plus current PR review wait time
-- [ ] Review capacity assessed: who reviews agent PRs, and how many per week can they
+- [ ] `private-dependencies-resolve`: Private dependencies resolve inside the agent environment
+- [ ] `agent-firewall`: Firewall enabled with an explicit allowlist, or disabling justified in writing
+- [ ] `issue-templates`: Issue template with required problem, acceptance criteria, and out-of-scope fields
+- [ ] `baseline-metrics`: Baseline metrics captured, including DORA four keys and current PR review wait time
+- [ ] `review-capacity`: Review capacity assessed: who reviews agent PRs, and how many per week can they
       absorb?
 
 ---
@@ -72,12 +78,12 @@ PRs faster than a team can review them; the generator feels productive while rev
 drown. Track PR wait time as the leading indicator and throttle before it degrades.
 
 **Gate to Level 4** — all required:
-- [ ] Agent PR merge rate stable and comparable to human PRs over at least 30 PRs
-- [ ] Revert rate on agent PRs no worse than on human PRs
-- [ ] Review wait time flat or improving since Level 3 began — if it is climbing, stop and
+- [ ] `agent-pr-merge-rate`: Agent PR merge rate stable and comparable to human PRs over at least 30 PRs
+- [ ] `agent-pr-revert-rate`: Revert rate on agent PRs no worse than on human PRs
+- [ ] `review-wait-time-stable`: Review wait time flat or improving since Level 3 began; if it is climbing, stop and
       fix review capacity before scaling
-- [ ] Documented prompt-injection posture; agent tokens least-privilege
-- [ ] At least one metrics review has changed a decision
+- [ ] `prompt-injection-posture`: Documented prompt-injection posture; agent tokens least-privilege
+- [ ] `metrics-review-changed-decision`: At least one metrics review has changed a decision
 
 ---
 

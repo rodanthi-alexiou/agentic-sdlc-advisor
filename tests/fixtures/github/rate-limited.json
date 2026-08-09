@@ -1,0 +1,18 @@
+{
+  "control": "code-scanning-blocking",
+  "endpoint": "GET /repos/example/repository/code-scanning/alerts",
+  "httpStatus": 429,
+  "responseClass": "rate-limited",
+  "prerequisite": {
+    "name": "authenticated repository read",
+    "verified": true
+  },
+  "permission": {
+    "required": "security-events:read",
+    "granted": true
+  },
+  "feature": {
+    "availability": "unknown",
+    "enabled": null
+  }
+}

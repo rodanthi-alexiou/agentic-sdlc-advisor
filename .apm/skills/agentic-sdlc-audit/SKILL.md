@@ -82,14 +82,27 @@ The collector emits a schema-valid inventory. If dispatch or collection is unava
 record the prerequisite failure and continue with independent manual checks. Do not parse
 the legacy `scan.sh` prose as structured evidence.
 
-Then gather what the script cannot see:
+Remote inspection is optional and capability-aware. Parse the configured remote with
+`scripts/github-remote-adapter.mjs`, then attempt read-only repository metadata only when
+authentication and the required capability are available. Successful authenticated
+metadata is authoritative for hosted repository identity and default branch. A configured
+remote or remote HEAD is only an attributed `unverified` local fallback.
 
-- `gh api repos/{owner}/{repo}/branches/{default}/protection` — branch protection.
-- `gh api repos/{owner}/{repo}` — visibility, default branch, language.
-- Repo Settings → Copilot → Cloud agent: firewall allowlist state, from grouped operator
-  input because it is not readable from the filesystem.
+Normalize every remote result with `normalizeRemoteObservation`. Record the endpoint,
+prerequisites, permission, feature availability, response class, and interpretation. Never
+retain response headers, raw bodies, issue text, pull request text, or token-shaped values.
+A `404` remains `unverified` unless repository and branch access, permission, endpoint
+semantics, and a no-effective-rules observation jointly establish a verified negative.
+
+Gather what the local collector cannot see through the normalized adapter contract:
+
+- Hosted repository identity and default branch from authenticated repository metadata
+- Effective default-branch rules, including required reviews and status checks
+- Named security feature states for code scanning, secret scanning, and push protection
+- Firewall allowlist state from grouped operator input because it is not readable from the
+  filesystem
 - Team size, Copilot plan, regulated domain, current Copilot usage, and prior coding-agent
-  use from the same grouped operator question.
+  use from the same grouped operator question
 
 Do not stall the audit waiting for answers. Proceed with what you have and mark the rest
 `UNVERIFIED`.
@@ -111,8 +124,8 @@ Record the profile in the report. It is the justification for everything downstr
 
 ### Phase 3 — Score the five pillars
 
-Read `references/rubric.md` and score each pillar 0–4 with observed evidence per line
-item. The pillars:
+Read `references/rubric.md` and score each pillar 0–4 from normalized findings by using
+`scripts/evidence-scoring.mjs`. Never score from prose or raw API responses. The pillars:
 
 - **A. Context** — `AGENTS.md`, `.github/copilot-instructions.md`, path-scoped
   `.github/instructions/*.instructions.md`
@@ -124,9 +137,12 @@ item. The pillars:
 - **E. Process & measurement** — issue templates and issue hygiene, spec-driven
   development, ADRs, review capacity, metrics baseline
 
-Overall maturity level is **the lowest pillar score, not the average**. A repo with
-excellent context files and no branch protection is Level 0, because the failure mode is
-unreviewed agent code reaching main. Say this explicitly when it applies.
+Overall maturity level is **the lowest pillar score, not the average**. Working-tree and
+`local-only` evidence cannot raise cloud-agent or CI readiness. Head-branch evidence can
+apply to code review, but not to deployed cloud readiness. Dependency-review readiness
+remains `unverified` in this release. A repo with excellent context files and no branch
+protection is Level 0, because the failure mode is unreviewed agent code reaching main.
+Say this explicitly when it applies.
 
 Map the score to a level using `references/maturity-model.md` and identify the specific
 **advancement gates** blocking the next level.

@@ -1,4 +1,18 @@
 {
+  "control": "repository-metadata",
+  "endpoint": "GET /repos/example/repository",
   "httpStatus": 401,
-  "prerequisiteSatisfied": true
+  "responseClass": "unauthenticated",
+  "prerequisite": {
+    "name": "authenticated repository read",
+    "verified": false
+  },
+  "permission": {
+    "required": "metadata:read",
+    "granted": null
+  },
+  "feature": {
+    "availability": "unknown",
+    "enabled": null
+  }
 }

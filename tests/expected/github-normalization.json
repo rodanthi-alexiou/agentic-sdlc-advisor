@@ -3,5 +3,10 @@
   "unauthenticated.json": "unauthenticated",
   "unauthorized.json": "unauthorized",
   "ambiguous-not-found.json": "unverified",
-  "disabled.json": "disabled"
+  "disabled.json": "disabled",
+  "verified-negative-not-found.json": "gap",
+  "success-negative.json": "gap",
+  "plan-unavailable.json": "unavailable",
+  "rate-limited.json": "unavailable",
+  "transient-error.json": "unavailable"
 }

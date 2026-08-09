@@ -1,4 +1,18 @@
 {
+  "control": "default-branch-protection",
+  "endpoint": "GET /repos/example/repository/branches/main/protection",
   "httpStatus": 403,
-  "prerequisiteSatisfied": true
+  "responseClass": "unauthorized",
+  "prerequisite": {
+    "name": "authenticated repository and default branch",
+    "verified": true
+  },
+  "permission": {
+    "required": "administration:read",
+    "granted": false
+  },
+  "feature": {
+    "availability": "unknown",
+    "enabled": null
+  }
 }

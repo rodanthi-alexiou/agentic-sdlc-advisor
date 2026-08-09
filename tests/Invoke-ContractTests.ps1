@@ -206,12 +206,26 @@ if ($MyInvocation.InvocationName -ne '.') {
         Assert-Condition -Condition ($Probe.dispatcher -eq 'node') -Message 'Dispatch runtime mismatch.'
 
         $HarnessPath = Join-Path $RepoRoot 'tests/contract-harness.mjs'
+        $Phase4ContractsPath = Join-Path $RepoRoot 'tests/phase4-contracts.mjs'
+        $Phase4Output = @(& node $Phase4ContractsPath 2>&1)
+        Assert-Condition -Condition ($LASTEXITCODE -eq 0) -Message "Phase 4 contracts failed:`n$($Phase4Output -join [Environment]::NewLine)"
         $ExpectedNormalization = Get-Content -Path (Join-Path $RepoRoot 'tests/expected/github-normalization.json') -Raw | ConvertFrom-Json -AsHashtable
+        $NormalizedRemoteFindings = @()
         foreach ($FixtureName in $ExpectedNormalization.Keys) {
             $FixturePath = Join-Path $RepoRoot "tests/fixtures/github/$FixtureName"
             $Normalized = Invoke-NodeJson -Arguments @($HarnessPath, '--normalize-http', $FixturePath)
-            Assert-Condition -Condition ($Normalized.status -eq $ExpectedNormalization[$FixtureName]) -Message "Unexpected normalization for $FixtureName."
+            Assert-Condition -Condition ($Normalized.finding.status -eq $ExpectedNormalization[$FixtureName]) -Message "Unexpected normalization for $FixtureName."
+            Assert-Condition -Condition (-not [string]::IsNullOrWhiteSpace($Normalized.endpoint)) -Message "Normalization omitted endpoint for $FixtureName."
+            Assert-Condition -Condition (-not [string]::IsNullOrWhiteSpace($Normalized.responseClass)) -Message "Normalization omitted response class for $FixtureName."
+            Assert-Condition -Condition ($Normalized.finding.source.kind -eq 'github-api') -Message "Normalization omitted GitHub API attribution for $FixtureName."
+            Assert-Condition -Condition ($Normalized.finding.trust.classification -eq 'untrusted-remote') -Message "Normalization omitted remote trust classification for $FixtureName."
+            $NormalizedRemoteFindings += $Normalized.finding
         }
+        $MergedInventory = Get-Content -Path (Join-Path $ExamplePath 'standard-inventory.json') -Raw | ConvertFrom-Json
+        $MergedInventory.auditId = 'remote-normalization-contract'
+        $MergedInventory.findings = $NormalizedRemoteFindings
+        $MergedInventoryValid = ($MergedInventory | ConvertTo-Json -Depth 20) | Test-Json -SchemaFile $SchemaPath
+        Assert-Condition -Condition $MergedInventoryValid -Message 'Normalized remote findings produced an invalid merged inventory.'
 
         $TempRoot = Join-Path ([System.IO.Path]::GetTempPath()) "advisor-contract-$([guid]::NewGuid())"
         $CollectorRoot = New-GitFixture -Path (Join-Path $TempRoot 'collector')

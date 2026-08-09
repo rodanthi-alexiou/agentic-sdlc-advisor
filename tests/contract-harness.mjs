@@ -2,6 +2,8 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import process from "node:process";
+import { normalizeRemoteObservation } from "../.apm/skills/agentic-sdlc-audit/scripts/github-remote-adapter.mjs";
+import { scoreEvidence } from "../.apm/skills/agentic-sdlc-audit/scripts/evidence-scoring.mjs";
 
 const SCRIPT_DIRECTORY = dirname(fileURLToPath(import.meta.url));
 
@@ -16,25 +18,6 @@ function parseArguments(argumentsList) {
     result[key.slice(2)] = value;
   }
   return result;
-}
-
-function normalizeHttp(fixture) {
-  if (fixture.httpStatus === 401) {
-    return "unauthenticated";
-  }
-  if (fixture.httpStatus === 403) {
-    return "unauthorized";
-  }
-  if (fixture.httpStatus === 404) {
-    return fixture.prerequisiteSatisfied === true ? "gap" : "unverified";
-  }
-  if (fixture.httpStatus < 200 || fixture.httpStatus >= 300) {
-    return "unavailable";
-  }
-  if (fixture.enabled === false) {
-    return "disabled";
-  }
-  return fixture.enforced === true ? "enforced" : "gap";
 }
 
 async function writeApproved(path, value) {
@@ -102,7 +85,19 @@ async function run() {
     const fixture = JSON.parse(
       await readFile(resolve(options["normalize-http"]), "utf8"),
     );
-    process.stdout.write(`${JSON.stringify({ status: normalizeHttp(fixture) })}\n`);
+    const normalized = normalizeRemoteObservation(
+      fixture,
+      options["observed-at"] ?? "2026-08-08T00:00:00.000Z",
+    );
+    process.stdout.write(`${JSON.stringify(normalized)}\n`);
+    return;
+  }
+
+  if (options["score-findings"]) {
+    const findings = JSON.parse(
+      await readFile(resolve(options["score-findings"]), "utf8"),
+    );
+    process.stdout.write(`${JSON.stringify(scoreEvidence(findings, { consumer: options.consumer }))}\n`);
     return;
   }
 

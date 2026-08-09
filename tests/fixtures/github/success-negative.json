@@ -1,5 +1,5 @@
 {
-  "control": "default-branch-protection",
+  "control": "required-status-checks",
   "endpoint": "GET /repos/example/repository/rules/branches/main",
   "httpStatus": 200,
   "responseClass": "success",
@@ -15,6 +15,6 @@
     "availability": "available",
     "enabled": true
   },
-  "observed": true,
+  "observed": false,
   "scope": "default-branch"
 }

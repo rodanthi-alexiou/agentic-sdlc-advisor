@@ -1,8 +1,8 @@
 {
-  "control": "default-branch-protection",
+  "control": "required-human-review",
   "endpoint": "GET /repos/example/repository/rules/branches/main",
-  "httpStatus": 200,
-  "responseClass": "success",
+  "httpStatus": 503,
+  "responseClass": "transient-error",
   "prerequisite": {
     "name": "authenticated repository and default branch",
     "verified": true
@@ -12,9 +12,7 @@
     "granted": true
   },
   "feature": {
-    "availability": "available",
-    "enabled": true
-  },
-  "observed": true,
-  "scope": "default-branch"
+    "availability": "unknown",
+    "enabled": null
+  }
 }

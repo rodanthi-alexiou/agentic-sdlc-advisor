@@ -1,20 +1,21 @@
 {
   "control": "default-branch-protection",
-  "endpoint": "GET /repos/example/repository/rules/branches/main",
-  "httpStatus": 200,
-  "responseClass": "success",
+  "endpoint": "GET /repos/example/repository/branches/main/protection",
+  "httpStatus": 404,
+  "responseClass": "not-found",
   "prerequisite": {
     "name": "authenticated repository and default branch",
     "verified": true
   },
   "permission": {
-    "required": "metadata:read",
+    "required": "administration:read",
     "granted": true
   },
   "feature": {
     "availability": "available",
     "enabled": true
   },
-  "observed": true,
+  "notFoundSemantics": "verified-negative",
+  "corroboration": "no-effective-rules",
   "scope": "default-branch"
 }

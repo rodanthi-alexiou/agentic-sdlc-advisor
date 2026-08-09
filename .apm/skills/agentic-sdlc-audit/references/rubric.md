@@ -1,9 +1,39 @@
-# Scoring rubric
+---
+title: Scoring rubric
+description: Deterministic pillar checks and evidence requirements for Agentic SDLC audits
+---
 
 Score each pillar 0–4. Record **observed evidence** for every line — a file path, a line
 count, a setting, or `NOT OBSERVED`. Presence alone is not a pass; read the contents.
 
 **Overall level = the minimum pillar score**, not the mean. Justify in the report.
+
+## Deterministic scoring contract
+
+`scripts/evidence-scoring.mjs` is the executable scoring contract. It consumes normalized
+findings only and uses the stable control identifiers below. Each score is cumulative: a
+pillar reaches a level only after all preceding level requirements pass. Repeated runs with
+the same findings must produce byte-equivalent results regardless of input order.
+
+Scope findings to the scored consumer before evaluating controls. Working-tree and
+`local-only` findings do not count for cloud-agent or CI readiness. Head-branch findings
+count for code review, but not cloud-agent readiness. Overall maturity is the minimum
+pillar score.
+
+Remote guardrail checks use these observables:
+
+| Control identifier | Conclusive positive observation |
+|---|---|
+| `default-branch-protection` | Effective default-branch rules or legacy protection block direct pushes |
+| `required-status-checks` | Effective rules require build, test, and lint checks |
+| `required-human-review` | Effective rules require at least one human approval |
+| `code-scanning-blocking` | Code scanning is enabled and blocks new high-severity findings |
+| `secret-scanning-push-protection` | Secret scanning and push protection are both enabled |
+
+Rulesets are preferred when available because they describe effective rules. Legacy branch
+protection remains a valid observable when its endpoint is supported and access is
+verified. Code scanning, secret scanning, and push protection remain separate named
+security observations even when repository metadata returns them together.
 
 ---
 

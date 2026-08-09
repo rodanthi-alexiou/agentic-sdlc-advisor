@@ -49,3 +49,31 @@ version. Producers emit exactly `1.0.0` until a compatible minor schema is publi
 
 Consumers must reject inventories that omit required evidence metadata. Unknown fields
 are rejected in version 1 so accidental producer drift is visible during development.
+
+## Merge and precedence
+
+Merge findings by stable control identifier and target consumer. A finding is eligible
+only when its recorded consumer and scope apply to that target:
+
+| Consumer | Eligible scopes |
+|---|---|
+| IDE agent | Working tree, head branch, default branch, repository, organization |
+| Code review | Head branch, default branch, repository, organization |
+| Cloud agent and CI | Default branch, repository, organization |
+| Maintainer | Working tree, head branch, default branch, repository, organization |
+
+Within an eligible control, prefer authenticated GitHub API observations, then derived,
+Git, operator, filesystem, and unsupported evidence. Prefer broader applicable scope and
+then the more conclusive status. Resolve final ties by finding identifier so input order
+cannot affect output.
+
+Working-tree and `local-only` findings never raise cloud-agent or CI scores. Head-branch
+findings may raise code-review scores because that consumer evaluates proposed branch
+content. Dependency review is forced to `unverified` until a supported observation is
+implemented.
+
+Authenticated repository metadata overrides configured remote and remote HEAD guesses for
+hosted identity and default branch. A `404` is not evidence of absence by itself. It
+becomes `gap` only when verified prerequisites, granted permission, known feature
+availability, documented verified-negative semantics, and a no-effective-rules observation
+all agree.

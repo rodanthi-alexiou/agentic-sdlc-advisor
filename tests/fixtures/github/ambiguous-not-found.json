@@ -1,4 +1,19 @@
 {
+  "control": "default-branch-protection",
+  "endpoint": "GET /repos/example/repository/branches/main/protection",
   "httpStatus": 404,
-  "prerequisiteSatisfied": false
+  "responseClass": "not-found",
+  "prerequisite": {
+    "name": "authenticated repository and default branch",
+    "verified": false
+  },
+  "permission": {
+    "required": "administration:read",
+    "granted": null
+  },
+  "feature": {
+    "availability": "unknown",
+    "enabled": null
+  },
+  "needed": "Verify repository identity, default branch, permission, and effective branch rules."
 }

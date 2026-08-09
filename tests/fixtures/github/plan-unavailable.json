@@ -12,8 +12,8 @@
     "granted": true
   },
   "feature": {
-    "availability": "available",
-    "enabled": false
+    "availability": "unavailable",
+    "enabled": null
   },
-  "observed": false
+  "needed": "A plan that exposes the named security feature is required."
 }
