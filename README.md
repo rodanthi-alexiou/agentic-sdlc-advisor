@@ -129,6 +129,66 @@ Audit this repository in strict mode. Return the compact report in chat and do n
 any files.
 ```
 
+Request an implementation-ready guide when you want to turn the audit evidence into
+bounded developer actions:
+
+```text
+/agentic-sdlc-audit improvement-guide
+```
+
+For a team new to agentic SDLC, request the smaller starter flow:
+
+```text
+/agentic-sdlc-audit starter-guide
+```
+
+The starter guide analyzes the repository and returns one beginner verdict, one next
+action, and an ordered implementation flow for task framing, narrow context, concise
+instructions, deterministic setup and focused validation, human-owned review, bounded
+PRs, and outcome measurement. It chooses between `AGENTS.md` and
+`.github/copilot-instructions.md` from observed repository shape and existing files
+instead of dumping both templates.
+
+Its cost lens is **cost per trusted merged outcome**:
+
+```text
+AI usage + CI + interaction + review + rework + operational risk
+```
+
+It prefers phased handoffs, minimum tool authority, focused checks, and reviewable PRs.
+It does not recommend multi-agent orchestration or numeric ROI without local evidence.
+
+You can also request the guide as a follow-up. The private guide command recollects strict
+inventory before rendering so stale finding selectors fail closed:
+
+```text
+Turn the audit findings into one compact implementation guide with grounded reasons,
+expected value hypotheses, acceptance criteria, validation steps, and stop conditions.
+```
+
+The guide is returned through chat only. It contains a verdict and next action, a
+prioritized roadmap, recommendation details, deferred actions and prerequisites,
+unknowns and verification steps, and the trusted source registry. Each recommendation
+includes its target, bounded steps, reason, dependencies, owner role, acceptance
+criteria, validation, measurement plan, and stop condition.
+
+Guide fields retain their provenance as `code-derived`, `catalogue-derived`,
+`model-proposed`, `operator-supplied`, or `unknown`. Repository findings, stable evidence
+references, controls, scores, gates, priority calculations, warnings, and unknowns remain
+deterministic. Model assistance is limited to validated proposal fields.
+
+Value claims use one of three labels. An `expected value hypothesis` describes a
+testable outcome without percentages, hours, currency, or payback. An `observed proxy`
+reports local flow, quality, risk, adoption, or developer-experience evidence without
+claiming financial return or causality. `Measured financial ROI` requires local realized
+benefits, complete incremental costs, attribution, finance approval, and uncertainty.
+External productivity percentages are never transferred into a repository forecast.
+
+For the starter guide, share any known team/reviewer capacity, Copilot plan and surfaces,
+risk or regulated status, private-feed/network/firewall constraints, build/test commands
+and known failures, prior agent usage, one bounded candidate task and owner, and baseline
+review/rework/CI signals. Missing values stay `UNVERIFIED`; the advisor does not guess.
+
 Approve exact paths when you want durable artifacts. The report and full inventory need
 separate approval:
 
@@ -197,6 +257,11 @@ Level 1 team not to adopt spec-driven development is often the most valuable lin
   visible from the filesystem. Supply `gh` auth or answer the questions; otherwise they land
   under *Not verified*.
 * Dependency-review readiness is unsupported and remains `UNVERIFIED` in this release.
+* Improvement and starter guides are conversational and are not persisted. The public
+  dispatcher continues to support only `report` and `inventory`; `--format guide` and
+  `--format starter-guide` are unsupported.
+* HTML output, a public remediation schema, a deterministic recommendation catalogue,
+  and caller-supplied guide files remain deferred.
 * The scoring thresholds are a considered opinion, not an industry standard. Adjust
   `rubric.md` to your organization's risk posture.
 * This ecosystem changes monthly. Re-verify `sources.md` before treating any citation as

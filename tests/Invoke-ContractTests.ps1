@@ -231,6 +231,14 @@ if ($MyInvocation.InvocationName -ne '.') {
         $RendererOutput = @(& node $RendererContractsPath 2>&1)
         Assert-Condition -Condition ($LASTEXITCODE -eq 0) -Message "Report renderer contracts failed:`n$($RendererOutput -join [Environment]::NewLine)"
         $RendererOutput | ForEach-Object { Write-Host $_ }
+        $GuideContractsPath = Join-Path $RepoRoot 'tests/developer-improvement-guide-contracts.mjs'
+        $GuideOutput = @(& node $GuideContractsPath 2>&1)
+        Assert-Condition -Condition ($LASTEXITCODE -eq 0) -Message "Developer improvement guide contracts failed:`n$($GuideOutput -join [Environment]::NewLine)"
+        $GuideOutput | ForEach-Object { Write-Host $_ }
+        $StarterGuideContractsPath = Join-Path $RepoRoot 'tests/starter-guide-contracts.mjs'
+        $StarterGuideOutput = @(& node $StarterGuideContractsPath 2>&1)
+        Assert-Condition -Condition ($LASTEXITCODE -eq 0) -Message "Starter guide contracts failed:`n$($StarterGuideOutput -join [Environment]::NewLine)"
+        $StarterGuideOutput | ForEach-Object { Write-Host $_ }
         $Phase4ContractsPath = Join-Path $RepoRoot 'tests/phase4-contracts.mjs'
         $Phase4Output = @(& node $Phase4ContractsPath 2>&1)
         Assert-Condition -Condition ($LASTEXITCODE -eq 0) -Message "Phase 4 contracts failed:`n$($Phase4Output -join [Environment]::NewLine)"

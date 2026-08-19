@@ -21,6 +21,13 @@ for package validation and release.
 The current release candidate is `1.1.0-rc.1`. It remains distinct from the final
 release while the repository pilot is deferred.
 
+The default plugin bundle contains 32 exact files. In addition to the existing report
+runtime, it includes the improvement-guide and starter-guide contracts plus six shared
+guide runtime modules for stable evidence references, rendering safety, trusted-source
+loading, remediation-view validation, compact Markdown rendering, and the private
+conversational command. The package boundary uses an explicit allowlist and rejects
+missing or unexpected files.
+
 ## Distribution options
 
 Three options. They are not alternatives — they stack. Pick based on **how many
@@ -161,6 +168,14 @@ Validate the package boundary before release:
 The check runs `apm compile --validate`, previews the default plugin bundle, and rejects
 missing or unexpected release files. It does not validate or synchronize `.github/`.
 
+The release exposes improvement guides and the beginner flow through the existing advisor:
+`/agentic-sdlc-audit improvement-guide` and
+`/agentic-sdlc-audit starter-guide`. It does not add a public dispatcher format, guide
+persistence, a public remediation schema, or HTML output. The private guide command is a
+package runtime boundary used by the conversational workflow; it accepts one bounded
+proposal envelope on stdin, recollects strict inventory, and emits Markdown only. The
+starter selector is private: `--profile starter-guide`.
+
 If you know from the start you want to ship a plugin, scaffold with
 `apm plugin init agentic-sdlc-advisor`, which writes `plugin.json` alongside `apm.yml`
 from day one.
@@ -218,6 +233,24 @@ try {
    node $Dispatcher --repo $InstallRoot --mode strict --format inventory
    if ($LASTEXITCODE -ne 0) { throw 'Full inventory smoke test failed.' }
 
+   $GuideCommand = Join-Path $InstallRoot '.agents/skills/agentic-sdlc-audit/scripts/guide-command.mjs'
+   $GuideTemplate = Join-Path $InstallRoot '.agents/skills/agentic-sdlc-audit/assets/improvement-guide-template.md'
+   $StarterGuideTemplate = Join-Path $InstallRoot '.agents/skills/agentic-sdlc-audit/assets/starter-guide-template.md'
+   if (-not (Test-Path -Path $GuideCommand -PathType Leaf)) {
+      throw 'Private guide command is missing from the installed artifact.'
+   }
+   if (-not (Test-Path -Path $GuideTemplate -PathType Leaf)) {
+      throw 'Improvement guide template is missing from the installed artifact.'
+   }
+   if (-not (Test-Path -Path $StarterGuideTemplate -PathType Leaf)) {
+      throw 'Starter guide template is missing from the installed artifact.'
+   }
+
+   $UnsupportedGuideOutput = @(& node $Dispatcher --repo $InstallRoot --mode strict --format guide 2>&1)
+   if ($LASTEXITCODE -eq 0) {
+      throw 'The public dispatcher unexpectedly accepted guide format.'
+   }
+
    Write-Output "Candidate artifact: $Artifact"
 }
 finally {
@@ -228,7 +261,9 @@ finally {
 The archive is the release-candidate artifact. A local plugin archive does not retain the
 source manifest scripts, so scratch smoke tests invoke the installed dispatcher under
 `.agents/skills/`. Source-checkout validation continues to exercise the public `apm run`
-and `apm run audit` aliases through `tests/Invoke-ContractTests.ps1`.
+and `apm run audit` aliases through `tests/Invoke-ContractTests.ps1`. That harness also
+executes the private guide process contract, including stdin limits, guide-only stdout,
+no-write behavior, stale-selector rejection, and the documented no-file pipelines.
 
 ---
 
