@@ -4,12 +4,22 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
 import { REMEDIATION_CONTRACT } from "../.apm/skills/agentic-sdlc-audit/scripts/remediation-view.mjs";
+import { collectLocalInventory } from "../.apm/skills/agentic-sdlc-audit/scripts/local-collector.mjs";
 
 const observedAt = "2026-08-18T00:00:00.000Z";
 const guideCommandPath = resolve(".apm/skills/agentic-sdlc-audit/scripts/guide-command.mjs");
 const auditDispatcherPath = resolve(".apm/skills/agentic-sdlc-audit/scripts/audit-dispatch.mjs");
 const baselineRepository = resolve("tests/fixtures/repositories/baseline");
 const promptPath = resolve(".apm/prompts/agentic-sdlc-audit.prompt.md");
+const { inventory: baselineInventory } = await collectLocalInventory({
+  root: baselineRepository,
+  mode: "strict",
+  observedAt,
+});
+const baselineInstructionScope = baselineInventory.findings.find(
+  ({ id }) => id === "copilot-instructions",
+)?.scope;
+assert.ok(baselineInstructionScope, "The baseline fixture must expose Copilot instructions.");
 
 async function snapshotDirectory(root) {
   const snapshot = [];
@@ -90,7 +100,7 @@ const proposal = {
     },
     applicability: {
       consumers: ["ide-agent"],
-      scopes: ["working-tree"],
+      scopes: [baselineInstructionScope],
       controlIds: ["copilot-instructions"],
       prerequisites: ["Verify every documented command in a clean checkout."],
     },

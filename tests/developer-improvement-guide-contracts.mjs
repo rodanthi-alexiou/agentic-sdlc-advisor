@@ -16,6 +16,7 @@ import {
 } from "../.apm/skills/agentic-sdlc-audit/scripts/remediation-view.mjs";
 import { renderGuideMarkdown } from "../.apm/skills/agentic-sdlc-audit/scripts/guide-renderer.mjs";
 import { runGuideCommand } from "../.apm/skills/agentic-sdlc-audit/scripts/guide-command.mjs";
+import { collectLocalInventory } from "../.apm/skills/agentic-sdlc-audit/scripts/local-collector.mjs";
 
 const registry = await loadTrustedSourceRegistry();
 assert.equal(registry.length, 28);
@@ -268,6 +269,15 @@ const beforeRepository = await snapshotDirectory(baselineRepository);
 const workingDirectory = await mkdtemp(join(tmpdir(), "agentic-sdlc-guide-"));
 try {
   const beforeWorkingDirectory = await snapshotDirectory(workingDirectory);
+  const { inventory: baselineInventory } = await collectLocalInventory({
+    root: baselineRepository,
+    mode: "strict",
+    observedAt,
+  });
+  const baselineInstructionScope = baselineInventory.findings.find(
+    ({ id }) => id === "copilot-instructions",
+  )?.scope;
+  assert.ok(baselineInstructionScope, "The baseline fixture must expose Copilot instructions.");
   const processProposal = structuredClone(proposal);
   processProposal.id = "copilot-instructions-improve";
   processProposal.findingIds = ["copilot-instructions"];
@@ -278,7 +288,7 @@ try {
   };
   processProposal.reason.applicability = {
     consumers: ["ide-agent"],
-    scopes: ["working-tree"],
+    scopes: [baselineInstructionScope],
     controlIds: processProposal.controlIds,
     prerequisites: ["Verify documented commands before publishing."],
   };
