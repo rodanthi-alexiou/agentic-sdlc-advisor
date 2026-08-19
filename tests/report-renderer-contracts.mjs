@@ -37,11 +37,19 @@ const pilots = Array.from({ length: REPORT_CONTRACT.maxPilots }, (_, index) => (
 
 const view = buildReportView(inventory, { consumer: "ide-agent", recommendations, pilots });
 const report = renderCompactReport(inventory, { consumer: "ide-agent", recommendations, pilots });
+const reversedView = buildReportView(
+  { ...inventory, findings: [...inventory.findings].reverse() },
+  { consumer: "ide-agent", recommendations, pilots },
+);
 
 assert.equal(view.metadata.schemaVersion, "1.0.0");
 assert.equal(view.metadata.collectorVersion, "1.0.0");
 assert.equal(view.metadata.scoringVersion, "1.0.0");
 assert.equal(view.findings[0].citation, "E01");
+assert.deepEqual(
+  view.findings.map(({ citation, id }) => ({ citation, id })),
+  reversedView.findings.map(({ citation, id }) => ({ citation, id })),
+);
 assert.equal(view.findings[0].scope, "working-tree");
 assert.deepEqual(view.findings[0].consumers, ["cloud-agent", "code-review", "ide-agent"]);
 assert.equal(view.score.overall, Math.min(...Object.values(view.score.pillars)));

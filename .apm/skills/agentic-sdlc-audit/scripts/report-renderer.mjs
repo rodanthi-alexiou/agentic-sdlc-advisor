@@ -1,4 +1,6 @@
 import { scoreEvidence } from "./evidence-scoring.mjs";
+import { assignEvidenceReferences } from "./evidence-references.mjs";
+import { encodeMarkdownText } from "./rendering-safety.mjs";
 
 export const REPORT_CONTRACT = Object.freeze({
   version: "1.0.0",
@@ -15,25 +17,6 @@ const PILLAR_LABELS = Object.freeze({
   processMeasurement: "Process and measurement",
 });
 
-const MARKDOWN_CHARACTERS = /[\\`*_{}\[\]()<>#+\-.!|]/gu;
-const SECRET_PATTERNS = Object.freeze([
-  /(?:gh[pousr]_[A-Za-z0-9_]{20,})/giu,
-  /(?:github_pat_[A-Za-z0-9_]{20,})/giu,
-  /(?:sk-[A-Za-z0-9_-]{20,})/giu,
-  /(?:AIza[0-9A-Za-z_-]{20,})/gu,
-]);
-
-function safeText(value) {
-  let text = String(value ?? "");
-  for (const pattern of SECRET_PATTERNS) text = text.replace(pattern, "[REDACTED]");
-  return text
-    .replace(/[\u0000-\u001f\u007f-\u009f]/gu, " ")
-    .replace(/&/gu, "&amp;")
-    .replace(MARKDOWN_CHARACTERS, (character) => `&#${character.codePointAt(0)};`)
-    .replace(/\s+/gu, " ")
-    .trim();
-}
-
 function boundedItems(value, name, limit) {
   if (value === undefined) return [];
   if (!Array.isArray(value)) throw new Error(`${name} must be an array.`);
@@ -43,10 +26,6 @@ function boundedItems(value, name, limit) {
 
 function sourceLabel(source) {
   return `${source.kind}:${source.location}`;
-}
-
-function findingCitation(index) {
-  return `E${String(index + 1).padStart(2, "0")}`;
 }
 
 function reportUnknowns(inventory) {
@@ -79,10 +58,9 @@ export function buildReportView(inventory, options = {}) {
   const pilots = boundedItems(options.pilots, "pilots", REPORT_CONTRACT.maxPilots);
   const consumer = options.consumer ?? "cloud-agent";
   const score = scoreEvidence(inventory.findings, { consumer });
-  const findings = [...inventory.findings]
-    .sort((left, right) => left.id.localeCompare(right.id))
-    .map((finding, index) => ({
-      citation: findingCitation(index),
+  const findings = assignEvidenceReferences(inventory.findings)
+    .map(({ finding, citation }) => ({
+      citation,
       id: finding.id,
       control: finding.control,
       status: finding.status,
@@ -135,29 +113,29 @@ function renderRows(rows, columnCount) {
 export function renderCompactReport(inventory, options = {}) {
   const view = buildReportView(inventory, options);
   const scoreRows = Object.entries(view.score.pillars).map(
-    ([pillar, value]) => `| ${safeText(PILLAR_LABELS[pillar] ?? pillar)} | ${value}/4 |`,
+    ([pillar, value]) => `| ${encodeMarkdownText(PILLAR_LABELS[pillar] ?? pillar)} | ${value}/4 |`,
   );
   const findingRows = view.findings.map((finding) =>
-    `| ${finding.citation} | ${safeText(finding.control)} | ${safeText(finding.status)} | ` +
-      `${safeText(finding.scope)} | ${safeText(finding.consumers.join(", "))} | ` +
-      `${safeText(finding.source)} | ${safeText(finding.method)} |`,
+    `| ${finding.citation} | ${encodeMarkdownText(finding.control)} | ${encodeMarkdownText(finding.status)} | ` +
+      `${encodeMarkdownText(finding.scope)} | ${encodeMarkdownText(finding.consumers.join(", "))} | ` +
+      `${encodeMarkdownText(finding.source)} | ${encodeMarkdownText(finding.method)} |`,
   );
   const unknownRows = view.unknowns.map((unknown) =>
-    `| ${safeText(unknown.control)} | ${safeText(unknown.reason)} | ${safeText(unknown.needed)} |`,
+    `| ${encodeMarkdownText(unknown.control)} | ${encodeMarkdownText(unknown.reason)} | ${encodeMarkdownText(unknown.needed)} |`,
   );
   const warningRows = view.warnings.map((warning) =>
-    `| ${safeText(warning.code)} | ${safeText(warning.message)} | ${safeText(warning.findingId)} |`,
+    `| ${encodeMarkdownText(warning.code)} | ${encodeMarkdownText(warning.message)} | ${encodeMarkdownText(warning.findingId)} |`,
   );
   const advancementGateRows = view.score.advancementGates.map((gate) =>
-    `| ${safeText(gate.controls.join(" or "))} | ${gate.satisfied ? "yes" : "no"} |`,
+    `| ${encodeMarkdownText(gate.controls.join(" or "))} | ${gate.satisfied ? "yes" : "no"} |`,
   );
   const recommendationRows = view.recommendations.map((recommendation, index) =>
-    `| ${index + 1} | ${safeText(recommendation.action)} | ${safeText(recommendation.rationale)} | ` +
-      `${safeText((recommendation.citations ?? []).join(", "))} |`,
+    `| ${index + 1} | ${encodeMarkdownText(recommendation.action)} | ${encodeMarkdownText(recommendation.rationale)} | ` +
+      `${encodeMarkdownText((recommendation.citations ?? []).join(", "))} |`,
   );
   const pilotRows = view.pilots.map((pilot, index) =>
-    `| ${index + 1} | ${safeText(pilot.name)} | ${safeText(pilot.task)} | ` +
-      `${safeText(pilot.successMetric)} | ${safeText(pilot.stopCondition)} |`,
+    `| ${index + 1} | ${encodeMarkdownText(pilot.name)} | ${encodeMarkdownText(pilot.task)} | ` +
+      `${encodeMarkdownText(pilot.successMetric)} | ${encodeMarkdownText(pilot.stopCondition)} |`,
   );
 
   return [
@@ -170,20 +148,20 @@ export function renderCompactReport(inventory, options = {}) {
     "",
     "| Field | Value |",
     "|---|---|",
-    `| Repository | ${safeText(view.metadata.repository)} |`,
-    `| Audit ID | ${safeText(view.metadata.auditId)} |`,
-    `| Consumer | ${safeText(view.metadata.consumer)} |`,
-    `| Inventory schema | ${safeText(view.metadata.schemaVersion)} |`,
-    `| Collector | ${safeText(view.metadata.collectorVersion)} |`,
-    `| Scoring contract | ${safeText(view.metadata.scoringVersion)} |`,
-    `| Report contract | ${safeText(view.contractVersion)} |`,
-    `| Method | ${safeText(view.metadata.method)} |`,
+    `| Repository | ${encodeMarkdownText(view.metadata.repository)} |`,
+    `| Audit ID | ${encodeMarkdownText(view.metadata.auditId)} |`,
+    `| Consumer | ${encodeMarkdownText(view.metadata.consumer)} |`,
+    `| Inventory schema | ${encodeMarkdownText(view.metadata.schemaVersion)} |`,
+    `| Collector | ${encodeMarkdownText(view.metadata.collectorVersion)} |`,
+    `| Scoring contract | ${encodeMarkdownText(view.metadata.scoringVersion)} |`,
+    `| Report contract | ${encodeMarkdownText(view.contractVersion)} |`,
+    `| Method | ${encodeMarkdownText(view.metadata.method)} |`,
     "",
     "## Score",
     "",
     `Overall level: **${view.score.overall}/4**`,
     "",
-    `Exact calculation: ${safeText(view.score.calculation)}`,
+    `Exact calculation: ${encodeMarkdownText(view.score.calculation)}`,
     "",
     "| Pillar | Score |",
     "|---|---:|",

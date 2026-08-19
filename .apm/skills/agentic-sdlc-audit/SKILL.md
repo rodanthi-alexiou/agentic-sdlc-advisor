@@ -48,6 +48,9 @@ audit unless the user explicitly asks for the follow-up implementation PR (Phase
    `schemas/inventory-v1.schema.json`. Scoring and rendering never parse prose output.
 8. **Ask once.** Group all non-discoverable operator fields into one question. Continue
    independent checks without an answer and record each missing fact as `UNVERIFIED`.
+9. **Generate guides only on explicit intent.** An `improvement-guide` or `starter-guide`
+  focus or follow-up request produces one compact guide through chat. It does not
+  authorize implementation.
 
 ## Output contract
 
@@ -61,6 +64,10 @@ Select one mode before collection:
 Both modes expose equivalent findings, scores, citations, warnings, and unknowns. Output
 disposition is not evidence and must not affect scoring. Full inventory persistence is
 optional and requires an explicit path in standard mode.
+
+The private improvement/starter guide command is not a third output format. The public
+dispatcher continues to expose only `report` and `inventory`; `--format guide` and
+`--format starter-guide` are unsupported.
 
 Before remote inspection, collect any missing team size, Copilot plan, regulated-domain
 status, firewall state, and prior coding-agent use in one grouped question. Do not repeat
@@ -195,6 +202,175 @@ only when a separate path was approved. In strict mode, return equivalent report
 without writing. Never hand-render or post-process deterministic factual sections. Offer,
 but do not assume, a follow-up implementation PR.
 
+### Improvement guide — only on explicit request
+
+For an explicit `improvement-guide` focus or follow-up request, keep collection read-only
+and use two bounded command operations:
+
+1. Run the public dispatcher with `--mode strict --format inventory` for proposal
+   preparation. Do not parse a report or accept caller-supplied inventory.
+2. Send one JSON proposal envelope through stdin to `scripts/guide-command.mjs` with the
+   same repository and consumer. The private command recollects strict inventory, loads
+   trusted sources from the fixed package path, validates selectors, builds the remediation
+   view, and writes compact Markdown only to stdout.
+
+The top-level envelope is closed and contains only:
+
+```json
+{
+  "contractVersion": "1.0.0",
+  "proposals": [],
+  "operatorInputs": {
+    "businessObjectives": [],
+    "ownerRoles": [],
+    "claimEvidence": [],
+    "starterContext": {
+      "teamSizeReviewerCapacity": [],
+      "copilotPlanSurfaces": [],
+      "riskRegulatedStatus": [],
+      "privateFeedsNetworkFirewall": [],
+      "buildTestKnownFailures": [],
+      "priorAgentUsage": [],
+      "candidateTaskOwner": [],
+      "baselineSignals": []
+    }
+  }
+}
+```
+
+Omit `starterContext` for the improvement guide and omit `operatorInputs` when no
+organizational facts were supplied. Never include inventory, scores, gates, warnings,
+unknowns, `E##` presentation references, trusted-source objects, relative-priority
+results, rendered Markdown, source paths, or output paths. The command accepts only
+`--repo`, `--consumer`, `--profile`, and the test-only `--observed-at`; stdin is capped
+at 64 KiB and unknown fields or arguments fail closed.
+
+Each proposal contains these closed, bounded fields:
+
+* Identity and action: `id`, `title`, `action`, `target`, and no more than five `steps`
+* Stable selectors: `findingIds`, `controlIds`, and verified `sourceRefs`
+* Structured reason: `observation`, `mechanism`, `applicability`, `assumptions`, and
+  `limitations`
+* Sequencing inputs: `priorityInputs`, `effort`, `owner`, and `dependencies`
+* Completion: no more than three `acceptanceCriteria`, three `validation` checks, one
+  `measurementPlan` primary metric, two guardrails, and one `stopCondition`
+* Value: one `valueClaim` tier
+
+Use only repository-relative target paths. An absent model-proposed path is noncanonical
+and must be verified in acceptance and validation. Owners are accountable roles, never
+invented individuals. Source IDs are selectors; only the fixed package source loader can
+establish trust. Stable finding IDs must bind to the fresh inventory, and stale selectors
+fail closed.
+
+The closed reason answers what was observed, why the action could affect the outcome,
+where it applies, which assumptions need verification, and what limitations constrain the
+claim. The observation contains repository facts and matching stable finding IDs. The
+mechanism contains no repository facts and cites matching verified source IDs.
+
+Value claims use exactly one variant:
+
+* `expected-value-hypothesis` contains an unquantified outcome, causal chain, metric to
+  test, assumptions, limitations, external-evidence limits, and verified source selectors
+* `observed-proxy` contains local baseline and observed windows, evidence references, a
+  supported code-calculated change formula, attribution, and nonfinancial metric
+* `measured-financial-roi` contains operator-supplied realized benefits, all incremental
+  cost categories, local evidence, attribution, uncertainty, finance approval, and the
+  code-calculated ROI result
+
+Numeric tiers do not become trusted because proposal fields say `code-derived` or
+`operator-supplied`. Each local-evidence identity, location, timestamp, and claimed value
+must either match a record in the fresh inventory exactly or match a closed
+`operatorInputs.claimEvidence` record exactly:
+
+```json
+{
+  "localEvidence": {
+    "id": "F1",
+    "kind": "operator-supplied",
+    "location": "finance/approval",
+    "observedAt": "2026-08-10T00:00:00.000Z",
+    "provenance": "operator-supplied"
+  },
+  "valueClaim": {}
+}
+```
+
+`valueClaim` is the complete proposed numeric claim before the deterministic result is
+added. Exact matching covers telemetry windows and samples, evidence locations, costs,
+benefits, attribution, uncertainty, and finance approval. Financial ROI requires every
+local-evidence record to have this operator match. A collector-backed observed proxy must
+use finding IDs, locations, timestamps, numeric discovery values, and an observation date
+from the fresh inventory. Unmatched numeric claims fail closed; use an unquantified
+`expected-value-hypothesis` instead.
+
+Never convert missing objectives, owner policy, baselines, costs, attribution, or stop
+thresholds into model facts. Preserve them as unknowns. Never alter code-derived findings,
+references, controls, scores, advancement gates, priority classes, calculated values,
+warnings, or unknowns.
+
+Use a native no-file pipeline. In PowerShell, pipe the in-memory object directly:
+
+```powershell
+$proposalEnvelope | ConvertTo-Json -Depth 20 -Compress | node (Join-Path $skillRoot 'scripts/guide-command.mjs') --repo $repo --consumer ide-agent
+```
+
+In a POSIX shell, pipe the serialized in-memory JSON value directly:
+
+```bash
+printf '%s' "$proposal_envelope" | node "$skill_root/scripts/guide-command.mjs" --repo "$repo" --consumer ide-agent
+```
+
+Do not hand-render or post-process the Markdown, invoke `node -e`, create a temporary file,
+choose an output path, or add a guide format to the public dispatcher. Return stdout
+unchanged as the guide-only chat response.
+
+### Starter guide — only on explicit beginner intent
+
+For `/agentic-sdlc-audit starter-guide` or equivalent beginner intent, reuse the same
+strict collection, closed proposal envelope, remediation view, trusted-source loader,
+redaction, and renderer boundary. Invoke the private command with
+`--profile starter-guide`; do not add a public dispatcher format.
+
+The deterministic starter output contains:
+
+1. A beginner verdict and one next action
+2. A six-step flow covering bounded task framing, narrow context, concise instructions,
+   deterministic setup and focused validation, human-owned review with bounded PRs, and
+   measurement of retries, CI, review, rework, risk, and merged outcome
+3. An `AGENTS.md` versus `.github/copilot-instructions.md` decision based on observed
+   existing files and repository shape, never a generic template dump
+4. A "What to share for implementation" section covering team/reviewer capacity, Copilot
+   plan and surfaces, risk status, private feeds/network/firewall, build/test commands and
+   known failures, prior agent usage, a candidate task and owner, and baseline
+   review/rework/CI signals
+5. Explicit deferral of multi-agent orchestration
+
+Fail closed before rendering when a starter proposal ID, control category, or
+recommendation text promotes multi-agent orchestration or agent fan-out. The generated
+"Do not do yet" section owns that deferral; model proposals cannot override it.
+
+Optimize for cost per trusted merged outcome:
+
+```text
+AI usage + CI + interaction + review + rework + operational risk
+```
+
+Prefer narrow context, phased handoffs, minimum tool authority, focused checks, and
+reviewable PRs. Missing starter context remains `UNVERIFIED`. Do not produce numeric ROI,
+savings, or productivity claims without local baseline, cost, attribution, and completed
+outcome evidence. Keep recommendations beginner-sized and use exact repository-relative
+paths plus acceptance criteria.
+
+Use the same no-file pipeline, adding the private profile selector:
+
+```powershell
+$proposalEnvelope | ConvertTo-Json -Depth 20 -Compress | node (Join-Path $skillRoot 'scripts/guide-command.mjs') --repo $repo --consumer ide-agent --profile starter-guide
+```
+
+```bash
+printf '%s' "$proposal_envelope" | node "$skill_root/scripts/guide-command.mjs" --repo "$repo" --consumer ide-agent --profile starter-guide
+```
+
 ### Phase 6 — Implementation (only on explicit request)
 
 If the user asks you to implement the recommendations:
@@ -220,6 +396,7 @@ Read these as needed — do not load them all up front.
 | `references/sources.md` | Phase 5, always. Canonical citation list — cite from here, do not invent URLs. |
 | `references/evidence-contract.md` | Phases 1, 3, and 5. Inventory status, scope, trust, and compatibility semantics. |
 | `assets/report-template.md` | Phase 5. Output structure. |
+| `assets/starter-guide-template.md` | Explicit starter-guide requests. Beginner rendering and cost boundary. |
 | `assets/templates/` | Phase 6 only. Starter files. |
 
 ## Failure modes to watch for in your own output
