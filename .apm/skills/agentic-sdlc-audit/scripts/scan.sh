@@ -89,7 +89,7 @@ if [ -d .github/workflows ]; then
   printf '   dependency-review referenced?     %s\n' \
     "$(grep -rqil 'dependency-review' .github/workflows 2>/dev/null && echo YES || echo NO)"
   printf '   test job referenced?              %s\n' \
-    "$(grep -rqilE '(npm|yarn|pnpm) (run )?test|pytest|go test|mvn .*test|gradle .*test|cargo test' .github/workflows 2>/dev/null && echo YES || echo NO)"
+    "$(grep -rqilE '(npm|yarn|pnpm) (run )?test|pytest|go test|mvn .*test|gradle .*test|cargo test|Invoke-Pester|Invoke-.*Test' .github/workflows 2>/dev/null && echo YES || echo NO)"
   printf '   pull_request_target used?         %s\n' \
     "$(grep -rqil 'pull_request_target' .github/workflows 2>/dev/null && echo 'YES <-- review for injection risk' || echo NO)"
 else
