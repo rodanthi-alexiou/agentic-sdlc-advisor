@@ -1,0 +1,48 @@
+name: "Copilot Setup Steps"
+
+# Prepares the GitHub Copilot cloud agent's environment before it starts a task.
+# The job name must be exactly `copilot-setup-steps` or GitHub silently ignores this
+# file. It must also exist on the default branch to take effect.
+# See: https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/customize-the-agent-environment
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+permissions:
+  contents: read
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    env:
+      APM_VERSION: 0.26.0
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify Node.js is available
+        shell: bash
+        run: node --version
+
+      - name: Verify PowerShell 7 is available
+        shell: pwsh
+        run: $PSVersionTable.PSVersion
+
+      - name: Install pinned APM CLI
+        shell: bash
+        run: curl -sSL https://aka.ms/apm-unix | sh -s -- "@v${APM_VERSION}"
+
+      - name: Verify APM CLI version
+        shell: bash
+        run: apm --version 2>&1 | tee /dev/stderr | grep -Fq "version ${APM_VERSION}"
+
+      - name: Run offline release-gating contracts
+        shell: pwsh
+        run: ./tests/Invoke-ContractTests.ps1
