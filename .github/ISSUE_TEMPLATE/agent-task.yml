@@ -1,0 +1,48 @@
+# For asynchronous delegation the issue IS the prompt. These fields are the difference
+# between a merged PR and a wasted agent run.
+name: Agent-ready task
+description: A task scoped tightly enough to assign to GitHub Copilot coding agent
+labels: ["agent-ready"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is wrong or missing, and why it matters. Not the solution.
+    validations: {required: true}
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Checklist. Include whether tests are required and what they must cover.
+      value: |
+        - [ ]
+        - [ ] Tests added covering <...>
+        - [ ] `.\tests\Invoke-ContractTests.ps1` passes
+        - [ ] `.\tools\Test-PackageBoundary.ps1` passes (only for changes under `.apm/`)
+    validations: {required: true}
+
+  - type: textarea
+    id: pointers
+    attributes:
+      label: Where to look
+      description: Files, modules, or symbols likely involved. A guess is better than nothing.
+    validations: {required: true}
+
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: >-
+        What must NOT change. Prevents opportunistic refactoring. Remember: do not edit
+        `.github/agents/`, `.github/prompts/`, or `.github/skills/` — `.apm/` is the
+        source of truth.
+    validations: {required: true}
+
+  - type: input
+    id: reviewer
+    attributes:
+      label: Reviewer
+      description: Who has the domain knowledge to catch a plausible-but-wrong answer?
+    validations: {required: true}
